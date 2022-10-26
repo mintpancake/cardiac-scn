@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import datetime
-import re
 
 STRUCTS = ['A2C-LV apex', 'A4C-LV apex', 'A4C-TV tip', 'ALAX-LV apex', 'Anterior mitral annulus', 'Anterolateral mitral annulus',
            'Anterolateral papillary muscle', 'Aortic annulus', 'Center of AV', 'IAS', 'IVS', 'IW', 'Interventricular septum',
@@ -14,6 +13,16 @@ VIEWS = ['2 chamber view (A2C)', '4 chamber view (A4C)', 'Apical LV short-axis v
          'Long-axis view (ALAX)', 'MV short-axis view (SAXMV)', 'Mid LV short-axis view (SAXM)']
 
 VIEWS_ABBR = ['A2C', 'A4C', 'SAXA', 'SAXB', 'ALAX', 'SAXMV', 'SAXM']
+
+VIEW_STRUCTS = {
+    'A2C': [0, 5, 24],
+    'A4C': [1, 2, 14, 21, 22, 30],
+    'SAXA': [12, 27, 28],
+    'SAXB': [8, 9, 29],
+    'ALAX': [3, 4, 7, 23],
+    'SAXMV': [15, 16, 17, 18, 19, 20],
+    'SAXM': [6, 10, 11, 13, 25, 26]
+}
 
 
 def ensure_dir(path):
