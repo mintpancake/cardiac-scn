@@ -1,8 +1,12 @@
 import os
 import nrrd
 import csv
+import numpy as np
 from scipy import ndimage
 import utils
+
+NRRD_OUT_SIZE = [300, 300, 300]
+SKIP_SAVED_NRRD = False
 
 csv_dirs = ['data/meta/4d_ijk/A2C',
             'data/meta/4d_ijk/A4C',
@@ -14,6 +18,25 @@ csv_dirs = ['data/meta/4d_ijk/A2C',
 
 nrrd_save_dir = 'data/nrrd'
 meta_save_dir = 'data/meta/3d_ijk'
+
+
+def pad(data: np.ndarray, out_size: list = NRRD_OUT_SIZE):
+    pad_width = np.array([[0, 0], [0, 0], [0, 0]])
+    offsets = np.array([0, 0, 0])
+    for d in range(3):
+        if data.shape[d] > out_size[d]:
+            start = (data.shape[d]-out_size[d])//2
+            end = start+out_size[d]
+            data = data.take(indices=range(start, end), axis=d)
+            offsets[d] = -start
+            print(f'{data.shape} is larger than expected {out_size}!')
+        else:
+            before = (out_size[d]-data.shape[d])//2
+            after = out_size[d]-data.shape[d]-before
+            pad_width[d] = [before, after]
+            offsets[d] = before
+    return np.pad(data, pad_width, 'constant'), offsets
+
 
 if __name__ == '__main__':
     for csv_dir in csv_dirs:
@@ -27,6 +50,8 @@ if __name__ == '__main__':
             filename_wo_ext = os.path.splitext(csv_filename)[0]
             nrrd_save_path = os.path.join(
                 nrrd_save_dir, view_name, f'{filename_wo_ext}.nrrd')
+            if SKIP_SAVED_NRRD and os.path.exists(nrrd_save_path):
+                continue
             meta_save_path = os.path.join(
                 meta_save_dir, view_name, f'{filename_wo_ext}.csv')
             csv_path = os.path.join(csv_dir, csv_filename)
@@ -44,17 +69,17 @@ if __name__ == '__main__':
                             header['space directions'][2][1],
                             header['space directions'][3][2])
 
-            if not os.path.exists(nrrd_save_path):
-                data_3d = data_4d[time_idx]
-                data_3d_scaled = ndimage.zoom(data_3d, space_scales)
-                nrrd.write(nrrd_save_path, data_3d_scaled)
+            data_3d = data_4d[time_idx]
+            data_3d_scaled = ndimage.zoom(data_3d, space_scales)
+            data_3d_padded, offsets = pad(data_3d_scaled)
+            nrrd.write(nrrd_save_path, data_3d_padded)
 
             for idx, row in enumerate(csv_mat):
                 struct, i, j, k = int(row[2]), float(
                     row[3]), float(row[4]), float(row[5])
-                i *= space_scales[0]
-                j *= space_scales[1]
-                k *= space_scales[2]
+                i, j, k = i*space_scales[0], j * \
+                    space_scales[1], k*space_scales[2]
+                i, j, k = i+offsets[0], j+offsets[1], k+offsets[2]
                 if idx == 0:
                     with open(meta_save_path, 'w') as meta_file:
                         csv_write = csv.writer(meta_file)
