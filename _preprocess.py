@@ -69,11 +69,13 @@ if __name__ == '__main__':
                             header['space directions'][2][1],
                             header['space directions'][3][2])
 
+            # Scaling and padding
             data_3d = data_4d[time_idx]
             data_3d_scaled = ndimage.zoom(data_3d, space_scales)
             data_3d_padded, offsets = pad(data_3d_scaled)
             nrrd.write(nrrd_save_path, data_3d_padded)
 
+            # Write meta
             for idx, row in enumerate(csv_mat):
                 struct, i, j, k = int(row[2]), float(
                     row[3]), float(row[4]), float(row[5])
