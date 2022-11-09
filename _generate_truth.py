@@ -55,13 +55,14 @@ def gaussian_excitation(mean: list,
 
     # Compute pdf in hotspot range
     x, y, z = np.mgrid[x_range[0]:x_range[1],
-                       y_range[0]:y_range[1], z_range[0]:z_range[1]]
+                       y_range[0]:y_range[1], 
+                       z_range[0]:z_range[1]]
     xyz = np.column_stack([x.flat, y.flat, z.flat])
     patch = multivariate_normal.pdf(xyz, mean, cov).reshape(x.shape)/max_val
 
     # Put hotspot on heatmap
     heatmap = np.zeros(size)
-    heatmap[x_range[0]:x_range[1],y_range[0]:y_range[1],z_range[0]:z_range[1]]=patch
+    heatmap[x_range[0]:x_range[1], y_range[0]:y_range[1], z_range[0]:z_range[1]] = patch
 
     return heatmap
 
