@@ -7,7 +7,7 @@ from scipy.stats import multivariate_normal
 import utils
 
 NRRD_OUT_SIZE = [300, 300, 300]
-SKIP_SAVED_NRRD = False
+SKIP_SAVED_NRRD = True
 
 csv_dirs = ['data/meta/3d_ijk/A2C',
             'data/meta/3d_ijk/A4C',
@@ -55,27 +55,31 @@ def gaussian_excitation(mean: list,
 
     # Compute pdf in hotspot range
     x, y, z = np.mgrid[x_range[0]:x_range[1],
-                       y_range[0]:y_range[1], 
+                       y_range[0]:y_range[1],
                        z_range[0]:z_range[1]]
     xyz = np.column_stack([x.flat, y.flat, z.flat])
     patch = multivariate_normal.pdf(xyz, mean, cov).reshape(x.shape)/max_val
 
     # Put hotspot on heatmap
     heatmap = np.zeros(size)
-    heatmap[x_range[0]:x_range[1], y_range[0]:y_range[1], z_range[0]:z_range[1]] = patch
+    heatmap[x_range[0]:x_range[1], y_range[0]
+        :y_range[1], z_range[0]:z_range[1]] = patch
 
     return heatmap
 
 
 if __name__ == '__main__':
-    for csv_dir in csv_dirs:
+    all_dirs = len(csv_dirs)
+    for (processed_dirs, csv_dir) in enumerate(csv_dirs):
         csv_filenames = os.listdir(csv_dir)
         csv_filenames = sorted(csv_filenames)
         view_name = os.path.basename(csv_dir)
         utils.ensure_dir(os.path.join(truth_save_dir, view_name))
         utils.ensure_dir(os.path.join(meta_save_dir, view_name))
-        for csv_filename in csv_filenames:
-            print(f'{csv_dir}/{csv_filename}')
+        all_files = len(csv_filenames)
+        for (processed_files, csv_filename) in enumerate(csv_filenames):
+            print(
+                f'[{processed_dirs+1}/{all_dirs}] [{processed_files+1}/{all_files}] {csv_dir}/{csv_filename}')
             filename_wo_ext = os.path.splitext(csv_filename)[0]
             truth_save_path = os.path.join(
                 truth_save_dir, view_name, f'{filename_wo_ext}.nrrd')

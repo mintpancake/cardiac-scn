@@ -6,7 +6,7 @@ from scipy import ndimage
 import utils
 
 NRRD_OUT_SIZE = [300, 300, 300]
-SKIP_SAVED_NRRD = False
+SKIP_SAVED_NRRD = True
 
 csv_dirs = ['data/meta/4d_ijk/A2C',
             'data/meta/4d_ijk/A4C',
@@ -39,14 +39,17 @@ def pad(data: np.ndarray, out_size: list = NRRD_OUT_SIZE):
 
 
 if __name__ == '__main__':
-    for csv_dir in csv_dirs:
+    all_dirs = len(csv_dirs)
+    for (processed_dirs, csv_dir) in enumerate(csv_dirs):
         csv_filenames = os.listdir(csv_dir)
         csv_filenames = sorted(csv_filenames)
         view_name = os.path.basename(csv_dir)
         utils.ensure_dir(os.path.join(nrrd_save_dir, view_name))
         utils.ensure_dir(os.path.join(meta_save_dir, view_name))
-        for csv_filename in csv_filenames:
-            print(f'{csv_dir}/{csv_filename}')
+        all_files = len(csv_filenames)
+        for (processed_files, csv_filename) in enumerate(csv_filenames):
+            print(
+                f'[{processed_dirs+1}/{all_dirs}] [{processed_files+1}/{all_files}] {csv_dir}/{csv_filename}')
             filename_wo_ext = os.path.splitext(csv_filename)[0]
             nrrd_save_path = os.path.join(
                 nrrd_save_dir, view_name, f'{filename_wo_ext}.nrrd')
