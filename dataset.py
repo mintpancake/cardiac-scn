@@ -1,6 +1,7 @@
 import os
 import csv
 import nrrd
+import torch
 from torch.utils.data import Dataset
 
 
@@ -17,8 +18,9 @@ class EchoData(Dataset):
 
     def __getitem__(self, index):
         meta = self.metas[index]
-        echo_data = nrrd.read(meta[0][2])[0]
-        truth_data = nrrd.read(meta[0][3])[0]
+        echo_data = torch.from_numpy(nrrd.read(meta[0][2])[0]).float()
+        echo_data = torch.unsqueeze(echo_data, dim=0)
+        truth_data = torch.from_numpy(nrrd.read(meta[0][3])[0]).float()
         structs = [row[1] for row in meta]
         return (echo_data, truth_data, structs)
 

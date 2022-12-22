@@ -1,0 +1,17 @@
+{
+    "view": "A2C",
+
+    "pth_path": "pths/default",
+    "log_path": "logs/default",
+    "train_meta_path": "data/meta/train/A2C",
+    "val_meta_path": "data/meta/val/A2C",
+
+    "epochs": 100,
+    "batch_size": 1,
+    "lr": 1e-6,
+    "weight_decay": 5e-4,
+
+    "print_interval": 20,
+    "save_interval": 20,
+    "log_interval": 1
+}

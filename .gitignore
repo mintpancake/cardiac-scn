@@ -132,5 +132,9 @@ dmypy.json
 data/
 nrrd/
 dev/
+logs/
+pths/
+*.pth
 *.nrrd
+events.*
 *dev*

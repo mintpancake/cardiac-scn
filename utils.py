@@ -34,7 +34,7 @@ def load_config(path):
     with open(path) as json_file:
         config = json.load(json_file)
         # globals().update(config)
-    print(config)
+    print(json.dumps(config, indent=2))
     return config
 
 
