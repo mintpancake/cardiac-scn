@@ -119,13 +119,13 @@ if __name__ == '__main__':
                     truth_path = truth_save_path
                 if idx == 0:
                     with open(meta_save_path, 'w') as meta_file:
-                        csv_write = csv.writer(meta_file)
+                        csv_writer = csv.writer(meta_file)
                         csv_head = ['index', 'struct', 'echo', 'truth']
-                        csv_write.writerow(csv_head)
+                        csv_writer.writerow(csv_head)
                         data_row = [idx, struct_idx, nrrd_path, truth_path]
-                        csv_write.writerow(data_row)
+                        csv_writer.writerow(data_row)
                 else:
                     with open(meta_save_path, 'a+') as meta_file:
-                        csv_write = csv.writer(meta_file)
+                        csv_writer = csv.writer(meta_file)
                         data_row = [idx, struct_idx, nrrd_path, truth_path]
-                        csv_write.writerow(data_row)
+                        csv_writer.writerow(data_row)

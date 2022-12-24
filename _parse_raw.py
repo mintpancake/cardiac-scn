@@ -45,13 +45,13 @@ if __name__ == '__main__':
                 view_path = os.path.join(view_dir, view_filename)
                 if not os.path.exists(view_path):
                     with open(view_path, 'w') as view_file:
-                        csv_write = csv.writer(view_file)
+                        csv_writer = csv.writer(view_file)
                         csv_head = ['nrrd', 'time', 'struct', 'i', 'j', 'k']
-                        csv_write.writerow(csv_head)
+                        csv_writer.writerow(csv_head)
                         data_row = [nrrd_path, time_idx, struct_idx, i, j, k]
-                        csv_write.writerow(data_row)
+                        csv_writer.writerow(data_row)
                 else:
                     with open(view_path, 'a+') as view_file:
-                        csv_write = csv.writer(view_file)
+                        csv_writer = csv.writer(view_file)
                         data_row = [nrrd_path, time_idx, struct_idx, i, j, k]
-                        csv_write.writerow(data_row)
+                        csv_writer.writerow(data_row)

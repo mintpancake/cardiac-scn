@@ -87,13 +87,13 @@ if __name__ == '__main__':
                 i, j, k = i+offsets[0], j+offsets[1], k+offsets[2]
                 if idx == 0:
                     with open(meta_save_path, 'w') as meta_file:
-                        csv_write = csv.writer(meta_file)
+                        csv_writer = csv.writer(meta_file)
                         csv_head = ['nrrd', 'struct', 'i', 'j', 'k']
-                        csv_write.writerow(csv_head)
+                        csv_writer.writerow(csv_head)
                         data_row = [nrrd_save_path, struct, i, j, k]
-                        csv_write.writerow(data_row)
+                        csv_writer.writerow(data_row)
                 else:
                     with open(meta_save_path, 'a+') as meta_file:
-                        csv_write = csv.writer(meta_file)
+                        csv_writer = csv.writer(meta_file)
                         data_row = [nrrd_save_path, struct, i, j, k]
-                        csv_write.writerow(data_row)
+                        csv_writer.writerow(data_row)
