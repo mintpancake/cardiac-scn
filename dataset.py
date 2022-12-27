@@ -9,7 +9,8 @@ class EchoData(Dataset):
     def __init__(self, meta_dir) -> None:
         super().__init__()
         self.meta_dir = meta_dir
-        self.csv_names = os.listdir(meta_dir)
+        self.csv_names = [i for i in sorted(os.listdir(meta_dir)) if os.path.splitext(i)[
+            1] == '.csv' or os.path.splitext(i)[1] == '.CSV']
         self.size = len(self.csv_names)
         self.metas = self.load(self.meta_dir, self.csv_names)
 

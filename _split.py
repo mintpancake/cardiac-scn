@@ -5,7 +5,7 @@ import numpy as np
 CLEANUP_EXIST = True
 
 all_dir = 'data/meta/3d_truth'
-test_meta_path = 'data/meta/test/TEST.csv'
+test_meta_path = 'data/meta/test/_TEST.txt'
 views = ['A2C', 'A4C', 'SAXA', 'SAXB', 'ALAX', 'SAXMV', 'SAXM']
 train_dir = 'data/meta/train'
 val_dir = 'data/meta/val'
@@ -13,10 +13,10 @@ test_dir = 'data/meta/test'
 
 if __name__ == '__main__':
     # Read predetermined test data
-    test_meta_reader = csv.reader(open(test_meta_path, 'r'))
     test_filenames = set()
-    for row in test_meta_reader:
-        test_filenames.add(row[0])
+    with open(test_meta_path) as file:
+        for line in file:
+            test_filenames.add(line.strip('\n'))
 
     for view in views:
         all_view_dir = os.path.join(all_dir, view)
@@ -43,18 +43,15 @@ if __name__ == '__main__':
         val_meta = shuffled_meta[8 * len(shuffled_meta) // 10:]
 
         # Record filenames
-        with open(os.path.join(train_view_dir, f'_{view}_TRAIN.csv'), 'w') as file:
-            csv_writer = csv.writer(file)
+        with open(os.path.join(train_view_dir, f'_{view}_TRAIN.txt'), 'w') as file:
             for m in train_meta:
-                csv_writer.writerow([os.path.splitext(m)[0]])
-        with open(os.path.join(val_view_dir, f'_{view}_VAL.csv'), 'w') as file:
-            csv_writer = csv.writer(file)
+                file.write(os.path.splitext(m)[0]+'\n')
+        with open(os.path.join(val_view_dir, f'_{view}_VAL.txt'), 'w') as file:
             for m in val_meta:
-                csv_writer.writerow([os.path.splitext(m)[0]])
-        with open(os.path.join(test_view_dir, f'_{view}_TEST.csv'), 'w') as file:
-            csv_writer = csv.writer(file)
+                file.write(os.path.splitext(m)[0]+'\n')
+        with open(os.path.join(test_view_dir, f'_{view}_TEST.txt'), 'w') as file:
             for m in test_meta:
-                csv_writer.writerow([os.path.splitext(m)[0]])
+                file.write(os.path.splitext(m)[0]+'\n')
 
         # Copy meta
         for m in train_meta:
