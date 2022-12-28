@@ -7,11 +7,11 @@
     "val_meta_path": "data/meta/val/A2C",
 
     "epochs": 100,
-    "batch_size": 1,
-    "lr": 1e-6,
+    "batch_size": 2,
+    "lr": 1e-4,
     "weight_decay": 5e-4,
 
-    "print_interval": 20,
+    "print_interval": 1,
     "save_interval": 20,
     "log_interval": 1
 }

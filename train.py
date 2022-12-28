@@ -37,9 +37,9 @@ class Trainer:
         self.val_data = EchoData(config['val_meta_path'])
 
         self.train_loader = DataLoader(
-            self.train_data, batch_size=config['batch_size'], shuffle=True, drop_last=False)
+            self.train_data, batch_size=config['batch_size'], shuffle=True, drop_last=False, num_workers=0)
         self.val_loader = DataLoader(
-            self.val_data, batch_size=config['batch_size'], shuffle=False, drop_last=False)
+            self.val_data, batch_size=config['batch_size'], shuffle=False, drop_last=False, num_workers=0)
 
         self.epochs = config['epochs']
         self.model = SCN(1, len(self.structs)).to(self.device)
@@ -58,7 +58,7 @@ class Trainer:
 
         for batch, (echo, truth, structs) in enumerate(self.train_loader):
             echo, truth = echo.to(self.device), truth.to(self.device)
-            pred = self.model(echo)
+            pred = self.model(echo)[0]
             loss = self.criterion(pred, truth, structs)
             loss.backward()
             self.optimizer.step()
@@ -81,7 +81,7 @@ class Trainer:
         with torch.no_grad():
             for echo, truth, structs in self.val_loader:
                 echo, truth = echo.to(self.device), truth.to(self.device)
-                pred = self.model(echo)
+                pred = self.model(echo)[0]
                 loss = self.criterion(pred, truth, structs)
                 val_loss += len(echo)*loss.item()
 

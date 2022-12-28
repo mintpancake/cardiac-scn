@@ -5,7 +5,8 @@ import numpy as np
 from scipy import ndimage
 import utils
 
-NRRD_OUT_SIZE = [300, 300, 300]
+PAD_OUT_SIZE = [300, 300, 300]
+RESIZE_OUT_SIZE = [64, 64, 64]
 SKIP_SAVED_NRRD = True
 
 csv_dirs = ['data/meta/4d_ijk/A2C',
@@ -20,7 +21,7 @@ nrrd_save_dir = 'data/nrrd'
 meta_save_dir = 'data/meta/3d_ijk'
 
 
-def pad(data: np.ndarray, out_size: list = NRRD_OUT_SIZE):
+def pad(data: np.ndarray, out_size: list = PAD_OUT_SIZE):
     pad_width = np.array([[0, 0], [0, 0], [0, 0]])
     offsets = np.array([0, 0, 0])
     for d in range(3):
@@ -76,7 +77,10 @@ if __name__ == '__main__':
             data_3d = data_4d[time_idx]
             data_3d_scaled = ndimage.zoom(data_3d, space_scales)
             data_3d_padded, offsets = pad(data_3d_scaled)
-            nrrd.write(nrrd_save_path, data_3d_padded)
+            resize_scale = RESIZE_OUT_SIZE[0]/PAD_OUT_SIZE[0]
+            data_3d_resized = ndimage.zoom(data_3d_padded, np.array(
+                RESIZE_OUT_SIZE)/np.array(PAD_OUT_SIZE))
+            nrrd.write(nrrd_save_path, data_3d_resized)
 
             # Write meta
             for idx, row in enumerate(csv_mat):
@@ -85,6 +89,7 @@ if __name__ == '__main__':
                 i, j, k = i*space_scales[0], j * \
                     space_scales[1], k*space_scales[2]
                 i, j, k = i+offsets[0], j+offsets[1], k+offsets[2]
+                i, j, k = i*resize_scale, j*resize_scale, k*resize_scale
                 if idx == 0:
                     with open(meta_save_path, 'w') as meta_file:
                         csv_writer = csv.writer(meta_file)
