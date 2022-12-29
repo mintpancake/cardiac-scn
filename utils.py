@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+import torch
 
 STRUCTS = ['A2C-LV apex', 'A4C-LV apex', 'A4C-TV tip', 'ALAX-LV apex', 'Anterior mitral annulus', 'Anterolateral mitral annulus',
            'Anterolateral papillary muscle', 'Aortic annulus', 'Center of AV', 'IAS', 'IVS', 'IW', 'Interventricular septum',
@@ -23,6 +24,12 @@ VIEW_STRUCTS = {
     'SAXMV': [15, 16, 17, 18, 19, 20],
     'SAXM': [6, 10, 11, 13, 25, 26]
 }
+
+
+def del_tensor_ele(arr, index):
+    arr1 = arr[0:index]
+    arr2 = arr[index+1:]
+    return torch.cat((arr1, arr2), dim=0)
 
 
 def ensure_dir(path):

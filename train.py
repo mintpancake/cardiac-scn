@@ -1,6 +1,7 @@
 import os
 import time
 import argparse
+import json
 import torch
 from torch import nn
 from torch.optim import SGD
@@ -11,10 +12,11 @@ from models.scn import SCN
 import utils
 
 
-def del_tensor_ele(arr, index):
-    arr1 = arr[0:index]
-    arr2 = arr[index+1:]
-    return torch.cat((arr1, arr2), dim=0)
+def weight_init(m):
+    if isinstance(m, nn.Conv3d):
+        nn.init.trunc_normal_(m.weight, mean=0, std=1e-2)
+        if m.bias is not None:
+            nn.init.constant_(m.bias, 0.0)
 
 
 class Trainer:
@@ -31,18 +33,23 @@ class Trainer:
         self.log_path = os.path.join(config['log_path'], self.init_time)
         os.makedirs(self.pth_path, exist_ok=True)
         os.makedirs(self.log_path, exist_ok=True)
+        with open(os.path.join(self.pth_path, '_CONFIG.json'), 'w') as f:
+            json.dump(config, f, indent=4)
+        with open(os.path.join(self.log_path, '_CONFIG.json'), 'w') as f:
+            json.dump(config, f, indent=4)
         self.logger = SummaryWriter(self.log_path)
 
         self.train_data = EchoData(config['train_meta_path'])
         self.val_data = EchoData(config['val_meta_path'])
 
         self.train_loader = DataLoader(
-            self.train_data, batch_size=config['batch_size'], shuffle=True, drop_last=False, num_workers=0)
+            self.train_data, batch_size=config['batch_size'], shuffle=True, drop_last=False, num_workers=4)
         self.val_loader = DataLoader(
-            self.val_data, batch_size=config['batch_size'], shuffle=False, drop_last=False, num_workers=0)
+            self.val_data, batch_size=config['batch_size'], shuffle=False, drop_last=False, num_workers=4)
 
         self.epochs = config['epochs']
         self.model = SCN(1, len(self.structs)).to(self.device)
+        self.model.apply(weight_init)
         self.loss_fn = nn.MSELoss(reduction='mean').to(self.device)
         self.optimizer = SGD(self.model.parameters(
         ), lr=config['lr'], momentum=0.99, weight_decay=config['weight_decay'])
@@ -107,8 +114,8 @@ class Trainer:
                     utils.VIEW_STRUCTS[self.view].index(_) for _ in diff]
                 pred_i, truth_i = pred[i], truth[i]
                 for j in diff_idx:
-                    pred_i = del_tensor_ele(pred_i, j)
-                    truth_i = del_tensor_ele(truth_i, j)
+                    pred_i = utils.del_tensor_ele(pred_i, j)
+                    truth_i = utils.del_tensor_ele(truth_i, j)
                 loss += self.loss_fn(pred_i, truth_i)
         return loss
 
