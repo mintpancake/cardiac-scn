@@ -6,16 +6,18 @@ import numpy as np
 from scipy.stats import multivariate_normal
 import utils
 
+MAX_VAL = 1
 NRRD_OUT_SIZE = [64, 64, 64]
-SKIP_SAVED_NRRD = True
+SKIP_SAVED_NRRD = False
 
-csv_dirs = ['data/meta/3d_ijk/A2C',
-            'data/meta/3d_ijk/A4C',
-            'data/meta/3d_ijk/ALAX',
-            'data/meta/3d_ijk/SAXA',
-            'data/meta/3d_ijk/SAXB',
-            'data/meta/3d_ijk/SAXM',
-            'data/meta/3d_ijk/SAXMV']
+# csv_dirs = ['data/meta/3d_ijk/A2C',
+#             'data/meta/3d_ijk/A4C',
+#             'data/meta/3d_ijk/ALAX',
+#             'data/meta/3d_ijk/SAXA',
+#             'data/meta/3d_ijk/SAXB',
+#             'data/meta/3d_ijk/SAXM',
+#             'data/meta/3d_ijk/SAXMV']
+csv_dirs = ['data/meta/3d_ijk/A2C']
 
 truth_save_dir = 'data/truth'
 meta_save_dir = 'data/meta/3d_truth'
@@ -59,12 +61,11 @@ def gaussian_excitation(mean: list,
                        z_range[0]:z_range[1]]
     xyz = np.column_stack([x.flat, y.flat, z.flat])
     patch = multivariate_normal.pdf(xyz, mean, cov).reshape(x.shape)/max_val
-    patch *= 255
+    patch *= MAX_VAL
 
     # Put hotspot on heatmap
     heatmap = np.zeros(size)
-    heatmap[x_range[0]:x_range[1], y_range[0]
-        :y_range[1], z_range[0]:z_range[1]] = patch
+    heatmap[x_range[0]:x_range[1], y_range[0]:y_range[1], z_range[0]:z_range[1]] = patch
 
     return heatmap
 

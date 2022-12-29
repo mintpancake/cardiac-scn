@@ -7,15 +7,16 @@ import utils
 
 PAD_OUT_SIZE = [300, 300, 300]
 RESIZE_OUT_SIZE = [64, 64, 64]
-SKIP_SAVED_NRRD = True
+SKIP_SAVED_NRRD = False
 
-csv_dirs = ['data/meta/4d_ijk/A2C',
-            'data/meta/4d_ijk/A4C',
-            'data/meta/4d_ijk/ALAX',
-            'data/meta/4d_ijk/SAXA',
-            'data/meta/4d_ijk/SAXB',
-            'data/meta/4d_ijk/SAXM',
-            'data/meta/4d_ijk/SAXMV']
+# csv_dirs = ['data/meta/4d_ijk/A2C',
+#             'data/meta/4d_ijk/A4C',
+#             'data/meta/4d_ijk/ALAX',
+#             'data/meta/4d_ijk/SAXA',
+#             'data/meta/4d_ijk/SAXB',
+#             'data/meta/4d_ijk/SAXM',
+#             'data/meta/4d_ijk/SAXMV']
+csv_dirs = ['data/meta/4d_ijk/A2C']
 
 nrrd_save_dir = 'data/nrrd'
 meta_save_dir = 'data/meta/3d_ijk'
