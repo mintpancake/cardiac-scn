@@ -19,7 +19,7 @@ def weight_init(m):
             nn.init.constant_(m.bias, 0.0)
 
 
-class Trainer:
+class Trainer(object):
     def __init__(self, config):
         self.init_time = utils.current_time()
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -38,6 +38,8 @@ class Trainer:
         with open(os.path.join(self.log_path, '_CONFIG.json'), 'w') as f:
             json.dump(config, f, indent=4)
         self.logger = SummaryWriter(self.log_path)
+        self.console = open(os.path.join(
+            self.log_path, 'console_history.txt'), 'w')
 
         self.train_data = EchoData(config['train_meta_path'])
         self.val_data = EchoData(config['val_meta_path'])
@@ -59,6 +61,10 @@ class Trainer:
         self.start_time = 0.0
         self.end_time = 0.0
 
+    def __del__(self):
+        self.logger.close()
+        self.console.close()
+
     def train(self):
         self.model.train()
         size = len(self.train_loader.dataset)
@@ -73,7 +79,7 @@ class Trainer:
 
             if batch % self.print_interval == 0:
                 loss_val, curr = loss.item(), batch*len(echo)
-                print(f'loss: {loss_val:>7f}  [{curr:>5d}/{size:>5d}]')
+                self.print(f'loss: {loss_val:>7f}  [{curr:>5d}/{size:>5d}]')
 
             self.total_train_step += 1
             if self.total_train_step % self.log_interval == 0:
@@ -94,9 +100,10 @@ class Trainer:
 
         val_loss /= size
         self.end_time = time.time()
-        print(f'Test error: \n'
-              f'  Avg loss: {val_loss:>8f} \n'
-              f'      Time: {(self.end_time - self.start_time):>8f} \n')
+        text = f'Test error: \n  '\
+               f'  Avg loss: {val_loss:>8f} \n      '\
+               f'      Time: {(self.end_time - self.start_time):>8f} \n'
+        self.print(text)
         self.total_val_step += 1
 
         if self.total_val_step % self.log_interval == 0:
@@ -120,11 +127,11 @@ class Trainer:
         return loss
 
     def start(self):
-        print(f"Training on {self.device}...")
+        self.print(f'Training on {self.device}...')
         self.start_time = time.time()
 
         for t in range(self.epochs):
-            print(
+            self.print(
                 f'Epoch {t+1} ({utils.current_time()})\n-----------------------------')
 
             self.train()
@@ -137,9 +144,12 @@ class Trainer:
         pth_file_path = os.path.join(self.pth_path, 'latest.pth')
         torch.save(self.model.state_dict(), pth_file_path)
 
-        self.logger.close()
-        print(
+        self.print(
             f'Completed {self.epochs} epochs; saved in "{self.pth_path}"')
+
+    def print(self, text):
+        print(text)
+        self.console.write(text+'\n')
 
 
 if __name__ == '__main__':
