@@ -5,8 +5,7 @@ import numpy as np
 from scipy import ndimage
 import utils
 
-PAD_OUT_SIZE = [300, 300, 300]
-RESIZE_OUT_SIZE = [64, 64, 64]
+RESIZE_OUT_SIZE = [128, 128, 128]
 SKIP_SAVED_NRRD = False
 
 # csv_dirs = ['data/meta/4d_ijk/A2C',
@@ -22,7 +21,9 @@ nrrd_save_dir = 'data/nrrd'
 meta_save_dir = 'data/meta/3d_ijk'
 
 
-def pad(data: np.ndarray, out_size: list = PAD_OUT_SIZE):
+def pad(data: np.ndarray):
+    max_length = max(data.shape)
+    out_size = [max_length, max_length, max_length]
     pad_width = np.array([[0, 0], [0, 0], [0, 0]])
     offsets = np.array([0, 0, 0])
     for d in range(3):
@@ -31,13 +32,12 @@ def pad(data: np.ndarray, out_size: list = PAD_OUT_SIZE):
             end = start+out_size[d]
             data = data.take(indices=range(start, end), axis=d)
             offsets[d] = -start
-            print(f'{data.shape} is larger than expected {out_size}!')
         else:
             before = (out_size[d]-data.shape[d])//2
             after = out_size[d]-data.shape[d]-before
             pad_width[d] = [before, after]
             offsets[d] = before
-    return np.pad(data, pad_width, 'constant'), offsets
+    return np.pad(data, pad_width, 'constant'), offsets, max_length
 
 
 if __name__ == '__main__':
@@ -51,7 +51,7 @@ if __name__ == '__main__':
         all_files = len(csv_filenames)
         for (processed_files, csv_filename) in enumerate(csv_filenames):
             print(
-                f'[{processed_dirs+1}/{all_dirs}] [{processed_files+1}/{all_files}] {csv_dir}/{csv_filename}')
+                f'[{processed_dirs+1}/{all_dirs}] [{processed_files+1}/{all_files}] {csv_dir}/{csv_filename}', end=' ')
             filename_wo_ext = os.path.splitext(csv_filename)[0]
             nrrd_save_path = os.path.join(
                 nrrd_save_dir, view_name, f'{filename_wo_ext}.nrrd')
@@ -76,11 +76,15 @@ if __name__ == '__main__':
 
             # Scaling and padding
             data_3d = data_4d[time_idx]
+            print(data_3d.shape, end=' ')
             data_3d_scaled = ndimage.zoom(data_3d, space_scales)
-            data_3d_padded, offsets = pad(data_3d_scaled)
-            resize_scale = RESIZE_OUT_SIZE[0]/PAD_OUT_SIZE[0]
+            print(data_3d_scaled.shape, end=' ')
+            data_3d_padded, offsets, max_length = pad(data_3d_scaled)
+            print(data_3d_padded.shape, end=' ')
+            resize_scale = RESIZE_OUT_SIZE[0]/max_length
             data_3d_resized = ndimage.zoom(data_3d_padded, np.array(
-                RESIZE_OUT_SIZE)/np.array(PAD_OUT_SIZE))
+                RESIZE_OUT_SIZE)/np.array([max_length, max_length, max_length]))
+            print(data_3d_resized.shape)
             nrrd.write(nrrd_save_path, data_3d_resized)
 
             # Write meta

@@ -7,7 +7,7 @@ from scipy.stats import multivariate_normal
 import utils
 
 MAX_VAL = 1
-NRRD_OUT_SIZE = [64, 64, 64]
+NRRD_OUT_SIZE = [128, 128, 128]
 SKIP_SAVED_NRRD = False
 
 # csv_dirs = ['data/meta/3d_ijk/A2C',
@@ -26,9 +26,9 @@ GAUSS_RANGE = {}
 
 
 def gaussian_excitation(mean: list,
-                        sigma: float = 2.0,
+                        sigma: float = 1.5,
                         size: list = NRRD_OUT_SIZE,
-                        eps: float = 1e-5) -> np.ndarray:
+                        eps: float = 1e-15) -> np.ndarray:
     mean = np.array(mean)
     assert sigma > 0.0
     cov = np.diag(np.repeat(sigma**2, 3))
