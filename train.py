@@ -92,7 +92,7 @@ class Trainer(object):
                     'training loss', loss.item(), self.total_train_step)
 
         train_loss /= num_batches
-        self.print(f'loss: {train_loss:>7f}  [mean]')
+        self.print(f'loss: {train_loss:>7f}  [  average  ]')
         return train_loss
 
     def eval(self):
@@ -109,8 +109,8 @@ class Trainer(object):
 
         val_loss /= size
         self.end_time = time.time()
-        text = f'Test error: \n  '\
-               f'  Avg loss: {val_loss:>8f} \n      '\
+        text = f'Test error: \n'\
+               f'  Avg loss: {val_loss:>8f} \n'\
                f'      Time: {(self.end_time - self.start_time):>8f} \n'
         self.print(text)
         self.total_val_step += 1
