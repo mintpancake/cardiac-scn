@@ -1,4 +1,6 @@
 {
+    "desc": "",
+
     "view": "A2C",
 
     "pth_path": "pths/default",
@@ -6,9 +8,9 @@
     "train_meta_path": "data/meta/train/A2C",
     "val_meta_path": "data/meta/val/A2C",
 
-    "epochs": 100,
+    "epochs": 200,
     "batch_size": 2,
-    "lr": 1e-4,
+    "lr": 1e-6,
     "weight_decay": 5e-4,
 
     "print_interval": 1,
