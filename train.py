@@ -84,7 +84,7 @@ class Trainer(object):
             train_loss += loss.item()
             if batch % self.print_interval == 0:
                 loss_val, curr = loss.item(), batch*len(echo)
-                self.print(f'loss: {loss_val:>7f}  [{curr:>5d}/{size:>5d}]')
+                self.print(f'loss: {loss_val:>9f} [{curr:>5d}/{size:>5d}]')
 
             self.total_train_step += 1
             if self.total_train_step % self.log_interval == 0:
@@ -92,7 +92,7 @@ class Trainer(object):
                     'training loss', loss.item(), self.total_train_step)
 
         train_loss /= num_batches
-        self.print(f'loss: {train_loss:>7f}  [  average  ]')
+        self.print(f'loss: {train_loss:>9f} [  average  ]')
         return train_loss
 
     def eval(self):
@@ -143,7 +143,7 @@ class Trainer(object):
 
         for t in range(self.epochs):
             self.print(
-                f'Epoch {t+1} ({utils.current_time()})\n-----------------------------')
+                f'Epoch {t+1} ({utils.current_time()})\n------------------------------')
 
             self.train()
             val_loss = self.eval()
