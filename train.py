@@ -154,7 +154,7 @@ class Trainer(object):
 
             if val_loss <= self.last_val_loss:
                 pth_file_path = os.path.join(self.pth_path, f'{self.best_epoch}-best.pth')
-                if os.path.exits(pth_file_path):
+                if os.path.exists(pth_file_path):
                     os.remove(pth_file_path)
                 self.best_epoch = t+1
                 pth_file_path = os.path.join(self.pth_path, f'{self.best_epoch}-best.pth')
