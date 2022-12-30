@@ -70,6 +70,8 @@ class Trainer(object):
     def train(self):
         self.model.train()
         size = len(self.train_loader.dataset)
+        num_batches = len(self.train_loader)
+        train_loss = 0
 
         for batch, (echo, truth, structs) in enumerate(self.train_loader):
             echo, truth = echo.to(self.device), truth.to(self.device)
@@ -79,6 +81,7 @@ class Trainer(object):
             self.optimizer.step()
             self.optimizer.zero_grad()
 
+            train_loss += loss.item()
             if batch % self.print_interval == 0:
                 loss_val, curr = loss.item(), batch*len(echo)
                 self.print(f'loss: {loss_val:>7f}  [{curr:>5d}/{size:>5d}]')
@@ -87,6 +90,10 @@ class Trainer(object):
             if self.total_train_step % self.log_interval == 0:
                 self.logger.add_scalar(
                     'training loss', loss.item(), self.total_train_step)
+
+        train_loss /= num_batches
+        self.print(f'loss: {train_loss:>7f}  [mean]')
+        return train_loss
 
     def eval(self):
         self.model.eval()
