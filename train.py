@@ -152,18 +152,17 @@ class Trainer(object):
                 pth_file_path = os.path.join(self.pth_path, f'{str(t+1)}.pth')
                 torch.save(self.model.state_dict(), pth_file_path)
 
-            if val_loss < self.last_val_loss:
+            if val_loss <= self.last_val_loss:
+                pth_file_path = os.path.join(self.pth_path, f'{self.best_epoch}-best.pth')
+                if os.path.exits(pth_file_path):
+                    os.remove(pth_file_path)
                 self.best_epoch = t+1
-                pth_file_path = os.path.join(self.pth_path, 'best.pth')
+                pth_file_path = os.path.join(self.pth_path, f'{self.best_epoch}-best.pth')
                 torch.save(self.model.state_dict(), pth_file_path)
 
         pth_file_path = os.path.join(
             self.pth_path, f'{self.epochs}-latest.pth')
         torch.save(self.model.state_dict(), pth_file_path)
-
-        if os.path.exits(os.path.join(self.pth_path, 'best.pth')):
-            os.rename(os.path.join(self.pth_path, 'best.pth'), os.path.join(
-                self.pth_path, f'{self.best_epoch}-best.pth'))
 
         self.print(
             f'Completed {self.epochs} epochs; saved in "{self.pth_path}"')
