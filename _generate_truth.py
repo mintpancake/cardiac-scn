@@ -7,6 +7,7 @@ from scipy.stats import multivariate_normal
 import utils
 
 MAX_VAL = 1
+GAMMA = 1000
 NRRD_OUT_SIZE = [128, 128, 128]
 SKIP_SAVED_NRRD = False
 
@@ -26,13 +27,17 @@ GAUSS_RANGE = {}
 
 
 def gaussian_excitation(mean: list,
-                        sigma: float = 1.5,
+                        sigma: float = 2.0,
                         size: list = NRRD_OUT_SIZE,
+                        mode: str = 'absolute',
                         eps: float = 1e-15) -> np.ndarray:
     mean = np.array(mean)
     assert sigma > 0.0
     cov = np.diag(np.repeat(sigma**2, 3))
-    max_val = multivariate_normal.pdf([[0, 0, 0]], [0, 0, 0], cov)
+    if mode == 'absolute':
+        scale = GAMMA
+    else:
+        scale = MAX_VAL/multivariate_normal.pdf([[0, 0, 0]], [0, 0, 0], cov)
 
     # Get hotspot range
     if GAUSS_RANGE.get(sigma):
@@ -40,7 +45,7 @@ def gaussian_excitation(mean: list,
     else:
         dist = sigma
         for _ in range(20):
-            if multivariate_normal.pdf([[dist, 0, 0]], [0, 0, 0], cov)/max_val < eps:
+            if multivariate_normal.pdf([[dist, 0, 0]], [0, 0, 0], cov)*scale < eps:
                 GAUSS_RANGE[sigma] = math.floor(dist)
                 break
             else:
@@ -60,8 +65,7 @@ def gaussian_excitation(mean: list,
                        y_range[0]:y_range[1],
                        z_range[0]:z_range[1]]
     xyz = np.column_stack([x.flat, y.flat, z.flat])
-    patch = multivariate_normal.pdf(xyz, mean, cov).reshape(x.shape)/max_val
-    patch *= MAX_VAL
+    patch = multivariate_normal.pdf(xyz, mean, cov).reshape(x.shape)*scale
 
     # Put hotspot on heatmap
     heatmap = np.zeros(size)
