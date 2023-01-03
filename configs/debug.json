@@ -1,8 +1,8 @@
 {
-    "desc": "",
+    "desc": "latest paper",
     "view": "A2C",
-    "pth_path": "pths/default",
-    "log_path": "logs/default",
+    "pth_path": "pths/debug",
+    "log_path": "logs/debug",
     "train_meta_path": "data/meta/train/A2C",
     "val_meta_path": "data/meta/val/A2C",
     "epochs": 200,
