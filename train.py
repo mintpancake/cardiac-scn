@@ -4,7 +4,7 @@ import argparse
 import json
 import torch
 from torch import nn
-from torch.optim import SGD
+from torch.optim import SGD, Adam
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from dataset import EchoData
@@ -12,19 +12,12 @@ from models.scn import SCN
 import utils
 
 
-def weight_init(m):
-    if isinstance(m, nn.Conv3d):
-        nn.init.trunc_normal_(m.weight, mean=0, std=1e-2)
-        if m.bias is not None:
-            nn.init.constant_(m.bias, 0.0)
-
-
 class Trainer(object):
     def __init__(self, config):
         self.init_time = utils.current_time()
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.view = config['view']
-        self.structs = sorted(utils.VIEW_STRUCTS[self.view])
+        self.structs = torch.IntTensor(sorted(utils.VIEW_STRUCTS[self.view]))
         self.print_interval = config['print_interval']
         self.save_interval = config['save_interval']
         self.log_interval = config['log_interval']
@@ -38,11 +31,14 @@ class Trainer(object):
         with open(os.path.join(self.log_path, '_CONFIG.json'), 'w') as f:
             json.dump(config, f, indent=4)
         self.logger = SummaryWriter(self.log_path)
-        self.console = open(os.path.join(
-            self.log_path, 'console_history.txt'), 'w')
+        self.console_path = os.path.join(self.log_path, 'console_history.txt')
+        console_file = open(self.console_path, 'w')
+        console_file.close()
 
-        self.train_data = EchoData(config['train_meta_path'])
-        self.val_data = EchoData(config['val_meta_path'])
+        self.train_data = EchoData(
+            config['train_meta_path'], norm_echo=True, norm_truth=True)
+        self.val_data = EchoData(
+            config['val_meta_path'], norm_echo=True, norm_truth=True)
 
         self.train_loader = DataLoader(
             self.train_data, batch_size=config['batch_size'], shuffle=True, drop_last=False, num_workers=4)
@@ -50,11 +46,14 @@ class Trainer(object):
             self.val_data, batch_size=config['batch_size'], shuffle=False, drop_last=False, num_workers=4)
 
         self.epochs = config['epochs']
-        self.model = SCN(1, len(self.structs)).to(self.device)
-        self.model.apply(weight_init)
-        self.loss_fn = nn.MSELoss(reduction='mean').to(self.device)
+        self.model = SCN(1, len(self.structs), filters=64,
+                         factor=4, dropout=0.5).to(self.device)
+        self.loss_fn = nn.MSELoss(reduction='sum').to(self.device)
+        # self.loss_fn = nn.L1Loss(reduction='mean').to(self.device)
+        # self.loss_fn = nn.SmoothL1Loss(reduction='mean', beta=1.0)
         self.optimizer = SGD(self.model.parameters(
-        ), lr=config['lr'], momentum=0.99, weight_decay=config['weight_decay'])
+        ), lr=config['lr'], momentum=0.99, nesterov=True, weight_decay=config['weight_decay'])
+        # self.optimizer = Adam(self.model.parameters(), lr=config['lr'])
 
         self.total_train_step = 0
         self.total_val_step = 0
@@ -63,36 +62,32 @@ class Trainer(object):
         self.last_val_loss = float('inf')
         self.best_epoch = 0
 
-    def __del__(self):
-        self.logger.close()
-        self.console.close()
-
     def train(self):
         self.model.train()
         size = len(self.train_loader.dataset)
-        num_batches = len(self.train_loader)
         train_loss = 0
 
         for batch, (echo, truth, structs) in enumerate(self.train_loader):
             echo, truth = echo.to(self.device), truth.to(self.device)
             pred = self.model(echo)[0]
             loss = self.criterion(pred, truth, structs)
+            loss /= (truth.shape[0]*truth.shape[1])
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
 
-            train_loss += loss.item()
+            train_loss += len(echo)*loss.item()
             if batch % self.print_interval == 0:
                 loss_val, curr = loss.item(), batch*len(echo)
-                self.print(f'loss: {loss_val:>9f} [{curr:>5d}/{size:>5d}]')
+                self.print(f'loss: {loss_val:.9e} [{curr:>3d}/{size:>3d}]')
 
             self.total_train_step += 1
             if self.total_train_step % self.log_interval == 0:
                 self.logger.add_scalar(
                     'training loss', loss.item(), self.total_train_step)
 
-        train_loss /= num_batches
-        self.print(f'loss: {train_loss:>9f} [  average  ]')
+        train_loss /= size
+        self.print(f'loss: {train_loss:.9e} [average]')
         return train_loss
 
     def eval(self):
@@ -105,12 +100,13 @@ class Trainer(object):
                 echo, truth = echo.to(self.device), truth.to(self.device)
                 pred = self.model(echo)[0]
                 loss = self.criterion(pred, truth, structs)
+                loss /= (truth.shape[0]*truth.shape[1])
                 val_loss += len(echo)*loss.item()
 
         val_loss /= size
         self.end_time = time.time()
         text = f'Test error: \n'\
-               f'  Avg loss: {val_loss:>8f} \n'\
+               f'  Avg loss: {val_loss:.9e} \n'\
                f'      Time: {(self.end_time - self.start_time):>8f} \n'
         self.print(text)
         self.total_val_step += 1
@@ -122,7 +118,7 @@ class Trainer(object):
         return val_loss
 
     def criterion(self, pred, truth, structs):
-        loss = 0
+        loss = 0.0
         for i in range(len(pred)):
             if len(structs[i]) == len(self.structs):
                 loss += self.loss_fn(pred[i], truth[i])
@@ -153,12 +149,15 @@ class Trainer(object):
                 torch.save(self.model.state_dict(), pth_file_path)
 
             if val_loss <= self.last_val_loss:
-                pth_file_path = os.path.join(self.pth_path, f'{self.best_epoch}-best.pth')
+                pth_file_path = os.path.join(
+                    self.pth_path, f'{self.best_epoch}-best.pth')
                 if os.path.exists(pth_file_path):
                     os.remove(pth_file_path)
                 self.best_epoch = t+1
-                pth_file_path = os.path.join(self.pth_path, f'{self.best_epoch}-best.pth')
+                pth_file_path = os.path.join(
+                    self.pth_path, f'{self.best_epoch}-best.pth')
                 torch.save(self.model.state_dict(), pth_file_path)
+                self.last_val_loss = val_loss
 
         pth_file_path = os.path.join(
             self.pth_path, f'{self.epochs}-latest.pth')
@@ -166,10 +165,13 @@ class Trainer(object):
 
         self.print(
             f'Completed {self.epochs} epochs; saved in "{self.pth_path}"')
+        self.logger.close()
 
     def print(self, text):
         print(text)
-        self.console.write(text+'\n')
+        console_file = open(self.console_path, 'a+')
+        console_file.write(text+'\n')
+        console_file.close()
 
 
 if __name__ == '__main__':
