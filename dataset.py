@@ -6,9 +6,11 @@ from torch.utils.data import Dataset
 
 
 class EchoData(Dataset):
-    def __init__(self, meta_dir) -> None:
+    def __init__(self, meta_dir, norm_echo=True, norm_truth=True) -> None:
         super().__init__()
         self.meta_dir = meta_dir
+        self.norm_echo = norm_echo
+        self.norm_truth = norm_truth
         self.csv_names = [i for i in sorted(os.listdir(meta_dir)) if os.path.splitext(i)[
             1] == '.csv' or os.path.splitext(i)[1] == '.CSV']
         self.size = len(self.csv_names)
@@ -21,8 +23,19 @@ class EchoData(Dataset):
         meta = self.metas[index]
         echo_data = torch.from_numpy(nrrd.read(meta[0][2])[0]).float()
         echo_data = torch.unsqueeze(echo_data, dim=0)
+        # echo data [-1:1]
+        if self.norm_echo:
+            max_echo = torch.max(echo_data)
+            min_echo = torch.min(echo_data)
+            mean_echo = (max_echo+min_echo)/2.0
+            scale_echo = (max_echo-min_echo)/2.0
+            echo_data = (echo_data-mean_echo)/scale_echo
         truth_data = torch.from_numpy(nrrd.read(meta[0][3])[0]).float()
-        structs = [row[1] for row in meta]
+        # truth data [0:1]
+        if self.norm_truth:
+            max_truth = torch.max(truth_data)
+            truth_data /= max_truth
+        structs = torch.IntTensor(sorted([row[1] for row in meta]))
         return (echo_data, truth_data, structs)
 
     def load(self, meta_dir, csv_names):
