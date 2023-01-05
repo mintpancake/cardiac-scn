@@ -3,12 +3,11 @@ import time
 import argparse
 import json
 import torch
-from torch import nn
-from torch.optim import SGD, Adam
+from torch import nn, optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from dataset import EchoData
-from models.scn import SCN
+from models.scn2 import SCN
 import utils
 
 
@@ -46,14 +45,16 @@ class Trainer(object):
             self.val_data, batch_size=config['batch_size'], shuffle=False, drop_last=False, num_workers=4)
 
         self.epochs = config['epochs']
-        self.model = SCN(1, len(self.structs), filters=64,
+        self.model = SCN(1, len(self.structs), filters=128,
                          factor=4, dropout=0.5).to(self.device)
         self.loss_fn = nn.MSELoss(reduction='sum').to(self.device)
-        # self.loss_fn = nn.L1Loss(reduction='mean').to(self.device)
-        # self.loss_fn = nn.SmoothL1Loss(reduction='mean', beta=1.0)
-        self.optimizer = SGD(self.model.parameters(
-        ), lr=config['lr'], momentum=0.99, nesterov=True, weight_decay=config['weight_decay'])
-        # self.optimizer = Adam(self.model.parameters(), lr=config['lr'])
+        # self.loss_fn = nn.L1Loss(reduction='sum').to(self.device)
+        # self.loss_fn = nn.SmoothL1Loss(reduction='sum', beta=1.0).to(self.device)
+        # self.optimizer = optim.SGD(self.model.parameters(
+        # ), lr=config['lr'], momentum=0.99, nesterov=True, weight_decay=config['weight_decay'])
+        self.optimizer = optim.AdamW(self.model.parameters(
+        ), lr=config['lr'], weight_decay=config['weight_decay'])
+        # self.optimizer = optim.Adam(self.model.parameters(), lr=config['lr'])
 
         self.total_train_step = 0
         self.total_val_step = 0
@@ -63,6 +64,7 @@ class Trainer(object):
         self.best_epoch = 0
 
     def train(self):
+        self.print('Train loss:')
         self.model.train()
         size = len(self.train_loader.dataset)
         train_loss = 0
@@ -79,7 +81,7 @@ class Trainer(object):
             train_loss += len(echo)*loss.item()
             if batch % self.print_interval == 0:
                 loss_val, curr = loss.item(), batch*len(echo)
-                self.print(f'loss: {loss_val:.9e} [{curr:>3d}/{size:>3d}]')
+                self.print(f'train: {loss_val:.9e} [{curr:>3d}/{size:>3d}]')
 
             self.total_train_step += 1
             if self.total_train_step % self.log_interval == 0:
@@ -87,28 +89,31 @@ class Trainer(object):
                     'training loss', loss.item(), self.total_train_step)
 
         train_loss /= size
-        self.print(f'loss: {train_loss:.9e} [average]')
+        self.print(f'train: {train_loss:.9e} [average]')
         return train_loss
 
     def eval(self):
+        self.print('Val loss:')
         self.model.eval()
         size = len(self.val_loader.dataset)
         val_loss = 0.0
 
         with torch.no_grad():
-            for echo, truth, structs in self.val_loader:
+            for batch, (echo, truth, structs) in enumerate(self.val_loader):
                 echo, truth = echo.to(self.device), truth.to(self.device)
                 pred = self.model(echo)[0]
                 loss = self.criterion(pred, truth, structs)
                 loss /= (truth.shape[0]*truth.shape[1])
                 val_loss += len(echo)*loss.item()
 
+                if batch % self.print_interval == 0:
+                    loss_val, curr = loss.item(), batch*len(echo)
+                    self.print(f'valid: {loss_val:.9e} [{curr:>3d}/{size:>3d}]')
+
         val_loss /= size
         self.end_time = time.time()
-        text = f'Test error: \n'\
-               f'  Avg loss: {val_loss:.9e} \n'\
-               f'      Time: {(self.end_time - self.start_time):>8f} \n'
-        self.print(text)
+        self.print(f'valid: {val_loss:.9e} [average]')
+        self.print(f'Time: {(self.end_time - self.start_time):>8f}\n')
         self.total_val_step += 1
 
         if self.total_val_step % self.log_interval == 0:
