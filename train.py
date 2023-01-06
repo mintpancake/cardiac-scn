@@ -37,7 +37,7 @@ class Trainer(object):
         self.train_data = EchoData(
             config['train_meta_path'], norm_echo=True, norm_truth=True, augmentation=True)
         self.val_data = EchoData(
-            config['val_meta_path'], norm_echo=True, norm_truth=True, augmentation=True)
+            config['val_meta_path'], norm_echo=True, norm_truth=True, augmentation=False)
 
         self.train_loader = DataLoader(
             self.train_data, batch_size=config['batch_size'], shuffle=True, drop_last=False, num_workers=8)
