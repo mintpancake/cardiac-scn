@@ -35,14 +35,14 @@ class Trainer(object):
         console_file.close()
 
         self.train_data = EchoData(
-            config['train_meta_path'], norm_echo=True, norm_truth=True)
+            config['train_meta_path'], norm_echo=True, norm_truth=True, augmentation=True)
         self.val_data = EchoData(
-            config['val_meta_path'], norm_echo=True, norm_truth=True)
+            config['val_meta_path'], norm_echo=True, norm_truth=True, augmentation=True)
 
         self.train_loader = DataLoader(
-            self.train_data, batch_size=config['batch_size'], shuffle=True, drop_last=False, num_workers=4)
+            self.train_data, batch_size=config['batch_size'], shuffle=True, drop_last=False, num_workers=8)
         self.val_loader = DataLoader(
-            self.val_data, batch_size=config['batch_size'], shuffle=False, drop_last=False, num_workers=4)
+            self.val_data, batch_size=config['batch_size'], shuffle=False, drop_last=False, num_workers=8)
 
         self.epochs = config['epochs']
         self.model = SCN(1, len(self.structs), filters=128,
