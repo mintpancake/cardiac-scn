@@ -78,18 +78,18 @@ class EchoData(Dataset):
     def fit_size(self, data, size):
         data_size = np.array(data.shape)
         size = np.array(size)
-        if data_size[0] > size[0]:
-            start = (data_size-size)//2
-            end = start+size
-            fitted_data = data[start[0]:end[0],
-                               start[1]:end[1],
-                               start[2]:end[2]]
-        else:
-            start = (size-data_size)//2
-            end = start+data_size
-            fitted_data = np.zeros(size)
-            fitted_data[start[0]:end[0], start[1]
-                :end[1], start[2]:end[2]] = data
+        # crop larger dimensions
+        for i in range(3):
+            if data_size[i] > size[i]:
+                start = (data_size[i]-size[i])//2
+                end = start+size[i]
+                data = data.take([start, end], axis=i)
+        # pad smaller dimensions
+        data_size = np.array(data.shape)
+        start = (size-data_size)//2
+        end = start+data_size
+        fitted_data = np.zeros(size)
+        fitted_data[start[0]:end[0], start[1]:end[1], start[2]:end[2]] = data
         return fitted_data
 
     def rotate_and_translate(self, data, angles, shift, size):
