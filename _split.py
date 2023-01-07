@@ -6,7 +6,8 @@ CLEANUP_EXIST = True
 
 all_dir = 'data/meta/3d_truth'
 test_meta_path = 'data/meta/test/_TEST.txt'
-views = ['A2C', 'A4C', 'SAXA', 'SAXB', 'ALAX', 'SAXMV', 'SAXM']
+# views = ['A2C', 'A4C', 'SAXA', 'SAXB', 'ALAX', 'SAXMV', 'SAXM']
+views = ['A2C']
 train_dir = 'data/meta/train'
 val_dir = 'data/meta/val'
 test_dir = 'data/meta/test'

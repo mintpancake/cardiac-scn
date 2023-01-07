@@ -7,7 +7,7 @@ STRUCTS = ['A2C-LV apex', 'A4C-LV apex', 'A4C-TV tip', 'ALAX-LV apex', 'Anterior
            'Anterolateral papillary muscle', 'Aortic annulus', 'Center of AV', 'IAS', 'IVS', 'IW', 'Interventricular septum',
            'LV', 'Lateral mitral annulus', 'MV anterior leaflet  A2', 'MV anterior leaflet  A3', 'MV anterior leaflet A1',
            'MV posterior leaflet P1', 'MV posterior leaflet P2', 'MV posterior leaflet P3', 'MV tip', 'Medial mitral annulus',
-           'Posterior mitral annulus', 'Posteromedial mitral annulus', 'Posteromedial papillary muscle', 'RV', 'RV apex',
+           'PV tip', 'Posterior mitral annulus', 'Posteromedial mitral annulus', 'Posteromedial papillary muscle', 'RV', 'RV apex',
            'SAXA-LV apex', 'SAXB-TV tip', 'Tricuspid annulus.']
 
 VIEWS = ['2 chamber view (A2C)', '4 chamber view (A4C)', 'Apical LV short-axis view (SAXA)', 'Basal short-axis view (SAXB)',
@@ -16,13 +16,13 @@ VIEWS = ['2 chamber view (A2C)', '4 chamber view (A4C)', 'Apical LV short-axis v
 VIEWS_ABBR = ['A2C', 'A4C', 'SAXA', 'SAXB', 'ALAX', 'SAXMV', 'SAXM']
 
 VIEW_STRUCTS = {
-    'A2C': [0, 5, 24],
-    'A4C': [1, 2, 14, 21, 22, 30],
-    'SAXA': [12, 27, 28],
-    'SAXB': [8, 9, 29],
-    'ALAX': [3, 4, 7, 23],
+    'A2C': [0, 5, 25],
+    'A4C': [1, 2, 14, 21, 22, 31],
+    'SAXA': [12, 28, 29],
+    'SAXB': [8, 9, 23, 30],
+    'ALAX': [3, 4, 7, 24],
     'SAXMV': [15, 16, 17, 18, 19, 20],
-    'SAXM': [6, 10, 11, 13, 25, 26]
+    'SAXM': [6, 10, 11, 13, 26, 27]
 }
 
 

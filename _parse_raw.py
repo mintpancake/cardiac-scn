@@ -7,12 +7,16 @@ json_dirs = ['data/raw/json/2021-09-17-annotations', 'data/raw/json/2021-09-20-a
              'data/raw/json/2021-09-27-annotations', 'data/raw/json/2021-09-30-annotations', 'data/raw/json/2021-10-04-annotations',
              'data/raw/json/2021-10-05-annotations', 'data/raw/json/2021-10-06-annotations', 'data/raw/json/2021-10-11-annotations',
              'data/raw/json/2021-10-12-annotations', 'data/raw/json/2021-10-21-annotations', 'data/raw/json/2021-10-22-annotations',
-             'data/raw/json/2021-10-25-annotations', 'data/raw/json/2021-10-27-annotations', 'data/raw/json/2021-10-28-annotations']
+             'data/raw/json/2021-10-25-annotations', 'data/raw/json/2021-10-26-annotations', 'data/raw/json/2021-10-27-annotations',
+             'data/raw/json/2021-10-28-annotations', 'data/raw/json/2021-10-29-annotations', 'data/raw/json/2021-11-01-annotations',
+             'data/raw/json/2021-11-02-annotations']
 nrrd_dirs = ['data/raw/nrrd/2021-09-17-3d-nrrd', 'data/raw/nrrd/2021-09-20-3d-nrrd', 'data/raw/nrrd/2021-09-23-3d-nrrd',
              'data/raw/nrrd/2021-09-27-3d-nrrd', 'data/raw/nrrd/2021-09-30-3d-nrrd', 'data/raw/nrrd/2021-10-04-3d-nrrd',
              'data/raw/nrrd/2021-10-05-3d-nrrd', 'data/raw/nrrd/2021-10-06-3d-nrrd', 'data/raw/nrrd/2021-10-11-3d-nrrd',
              'data/raw/nrrd/2021-10-12-3d-nrrd', 'data/raw/nrrd/2021-10-21-3d-nrrd', 'data/raw/nrrd/2021-10-22-3d-nrrd',
-             'data/raw/nrrd/2021-10-25-3d-nrrd', 'data/raw/nrrd/2021-10-27-3d-nrrd', 'data/raw/nrrd/2021-10-28-3d-nrrd']
+             'data/raw/nrrd/2021-10-25-3d-nrrd', 'data/raw/nrrd/2021-10-26-3d-nrrd', 'data/raw/nrrd/2021-10-27-3d-nrrd',
+             'data/raw/nrrd/2021-10-28-3d-nrrd', 'data/raw/nrrd/2021-10-29-3d-nrrd', 'data/raw/nrrd/2021-11-01-3d-nrrd',
+             'data/raw/nrrd/2021-11-02-3d-nrrd']
 meta_dir = "data/meta/4d_ijk"
 
 if __name__ == '__main__':
