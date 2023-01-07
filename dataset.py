@@ -50,7 +50,8 @@ class EchoData(Dataset):
             echo_data = self.adjust_intensity(echo_data, multiply, add)
 
         echo_data = torch.from_numpy(
-            echo_data).float().unsqueeze(echo_data, dim=0)
+            echo_data).float()
+        echo_data = torch.unsqueeze(echo_data, dim=0)
         truth_data = torch.from_numpy(truth_data).float()
         structs = torch.IntTensor(sorted([row[1] for row in meta]))
 
