@@ -5,16 +5,19 @@ from models.scn import SCN
 from dataset import EchoData
 
 pth_path = 'pths/tune/2023-01-08-00-03-49/50.pth'
+save_dir = 'images'
 
 train_meta_path = 'data/meta/train/A2C'
 val_meta_path = 'data/meta/val/A2C'
 num_structs = 3
 
-data_index = 0
-channel, x = 0, 66
-
+# data/nrrd/A2C/PWHOR_29Oct2021_D4T9M44V_3DQ.nrrd,0,62.98279716118316,62.5814837158377,102.28001652296312
+# data/nrrd/A2C/PWHOR_29Oct2021_D4T9M44V_3DQ.nrrd,5,69.51727920359784,69.51762455990682,53.80436209840961
+# data/nrrd/A2C/PWHOR_29Oct2021_D4T9M44V_3DQ.nrrd,25,59.28939426764443,58.66105628223342,53.80436209840961
 use_val = True
-save_dir = 'images'
+data_index = 0
+channel, x = 0, 63
+
 
 if __name__ == '__main__':
     train_dataset = EchoData(train_meta_path, norm_echo=True,
