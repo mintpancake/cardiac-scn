@@ -4,7 +4,7 @@ from utils import draw
 from models.scn import SCN
 from dataset import EchoData
 
-pth_path = 'pths/tune/2023-01-08-00-03-49/60.pth'
+pth_path = 'pths/tune/2023-01-08-00-03-49/50.pth'
 
 train_meta_path = 'data/meta/train/A2C'
 val_meta_path = 'data/meta/val/A2C'
@@ -18,9 +18,9 @@ save_dir = 'images'
 
 if __name__ == '__main__':
     train_dataset = EchoData(train_meta_path, norm_echo=True,
-                          norm_truth=True, augmentation=False)
+                             norm_truth=True, augmentation=False)
     val_dataset = EchoData(val_meta_path, norm_echo=True,
-                        norm_truth=True, augmentation=False)
+                           norm_truth=True, augmentation=False)
     if use_val:
         echo_data, truth_data, _ = val_dataset[data_index]
     else:
@@ -28,7 +28,8 @@ if __name__ == '__main__':
 
     draw(echo_data.cpu().numpy()[0][x], os.path.join(save_dir, 'echo.png'))
 
-    draw(truth_data.cpu().numpy()[channel][x], os.path.join(save_dir, 'truth.png'))
+    draw(truth_data.cpu().numpy()[channel][x],
+         os.path.join(save_dir, 'truth.png'))
 
     echo_data.unsqueeze_(dim=0)
     model = SCN(1, num_structs, filters=128, factor=4, dropout=0.5).to('cpu')
@@ -45,20 +46,16 @@ if __name__ == '__main__':
 
     draw(pred.cpu().numpy()[0][channel][x], os.path.join(save_dir, 'pred.png'))
 
-    if torch.abs(pred_HLA.max()) < torch.abs(pred_HLA.min()):
+    if torch.abs(pred_HLA.max()) < torch.abs(pred_HLA.min()) and torch.abs(pred_HSC.max()) < torch.abs(pred_HSC.min()):
         sign = -1
-        print('Invert HLA')
+        print('Invert HLA HSC')
     else:
         sign = 1
     pred_HLA *= sign
+    pred_HSC *= sign
+
     draw(pred_HLA.cpu().numpy()[0][channel][x],
          os.path.join(save_dir, 'pred_HLA.png'))
 
-    if torch.abs(pred_HSC.max()) < torch.abs(pred_HSC.min()):
-        sign = -1
-        print('Invert HSC')
-    else:
-        sign = 1
-    pred_HSC *= sign
     draw(pred_HSC.cpu().numpy()[0][channel][x],
          os.path.join(save_dir, 'pred_HSC.png'))
