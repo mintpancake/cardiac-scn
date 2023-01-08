@@ -135,6 +135,7 @@ nrrd/
 dev/
 logs/
 pths/
+images/
 *.pth
 *.nrrd
 events.*

@@ -1,7 +1,9 @@
 import json
 import os
 from datetime import datetime
+from PIL import Image
 import torch
+import numpy as np
 
 STRUCTS = ['A2C-LV apex', 'A4C-LV apex', 'A4C-TV tip', 'ALAX-LV apex', 'Anterior mitral annulus', 'Anterolateral mitral annulus',
            'Anterolateral papillary muscle', 'Aortic annulus', 'Center of AV', 'IAS', 'IVS', 'IW', 'Interventricular septum',
@@ -75,3 +77,10 @@ def get_view_index(name, type='abbr'):
         return VIEWS.index(name)
     elif type == 'abbr':
         return VIEWS_ABBR.index(name)
+
+
+def draw(data, filename):
+    int_data = (((data - data.min()) / (data.max() - data.min()))
+                * 255.9).astype(np.uint8)
+    image = Image.fromarray(int_data)
+    image.save(filename)

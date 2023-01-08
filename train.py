@@ -7,7 +7,7 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from dataset import EchoData
-from models.scn2 import SCN
+from models.scn import SCN
 import utils
 
 
