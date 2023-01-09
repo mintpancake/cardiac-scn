@@ -79,7 +79,10 @@ def get_view_index(name, type='abbr'):
         return VIEWS_ABBR.index(name)
 
 
-def draw(data, filename):
+def draw(data, filename, mode='clip'):
+    if mode == 'clip':
+        data[data < 0.0] = 0.0
+
     int_data = (((data - data.min()) / (data.max() - data.min()))
                 * 255.9).astype(np.uint8)
     image = Image.fromarray(int_data)
