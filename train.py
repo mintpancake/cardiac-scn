@@ -69,7 +69,7 @@ class Trainer(object):
         size = len(self.train_loader.dataset)
         train_loss = 0
 
-        for batch, (echo, truth, structs) in enumerate(self.train_loader):
+        for batch, (echo, truth, structs, _) in enumerate(self.train_loader):
             echo, truth = echo.to(self.device), truth.to(self.device)
             pred = self.model(echo)[0]
             loss = self.criterion(pred, truth, structs)
@@ -99,7 +99,7 @@ class Trainer(object):
         val_loss = 0.0
 
         with torch.no_grad():
-            for batch, (echo, truth, structs) in enumerate(self.val_loader):
+            for batch, (echo, truth, structs, _) in enumerate(self.val_loader):
                 echo, truth = echo.to(self.device), truth.to(self.device)
                 pred = self.model(echo)[0]
                 loss = self.criterion(pred, truth, structs)

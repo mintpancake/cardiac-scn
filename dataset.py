@@ -24,6 +24,7 @@ class EchoData(Dataset):
 
     def __getitem__(self, index):
         meta = self.metas[index]
+        filename = os.path.splitext(os.path.basename(meta[0][2]))[0]
         echo_data = nrrd.read(meta[0][2])[0]  # np.uint8
         truth_data = nrrd.read(meta[0][3])[0]  # np.float64
 
@@ -55,7 +56,7 @@ class EchoData(Dataset):
         truth_data = torch.from_numpy(truth_data).float()
         structs = torch.IntTensor(sorted([row[1] for row in meta]))
 
-        return (echo_data, truth_data, structs)
+        return (echo_data, truth_data, structs, filename)
 
     def augment(self, echo_data, truth_data, zoom, shift, angles):
         size = echo_data.shape
