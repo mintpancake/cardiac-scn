@@ -1,11 +1,11 @@
 {
-    "desc": "augmentation",
+    "desc": "AdaptiveWingLoss",
     "view": "A2C",
     "pth_path": "pths/tune",
     "log_path": "logs/tune",
     "train_meta_path": "data/meta/train/A2C",
     "val_meta_path": "data/meta/val/A2C",
-    "epochs": 200,
+    "epochs": 100,
     "batch_size": 1,
     "lr": 1e-5,
     "weight_decay": 5e-4,
