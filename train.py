@@ -9,6 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 from dataset import EchoData
 from models.scn import SCN
 from criterion.adaptive_wing_loss import AdaptiveWingLoss
+from criterion.weighted_loss import WeightedAdaptiveWingLoss
 import utils
 
 
@@ -48,7 +49,8 @@ class Trainer(object):
         self.epochs = config['epochs']
         self.model = SCN(1, len(self.structs), filters=128,
                          factor=4, dropout=0.5).to(self.device)
-        self.loss_fn = AdaptiveWingLoss(reduction='sum').to(self.device)
+        self.loss_fn = WeightedAdaptiveWingLoss(reduction='sum').to(self.device)
+        # self.loss_fn = AdaptiveWingLoss(reduction='sum').to(self.device)
         # self.loss_fn = nn.MSELoss(reduction='sum').to(self.device)
         # self.loss_fn = nn.L1Loss(reduction='sum').to(self.device)
         # self.loss_fn = nn.SmoothL1Loss(reduction='sum', beta=1.0).to(self.device)

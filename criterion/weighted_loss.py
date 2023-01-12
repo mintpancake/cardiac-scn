@@ -31,19 +31,20 @@ class WeightedAdaptiveWingLoss(nn.Module):
     def __init__(self, W=10, alpha=2.1, omega=14, epsilon=1, theta=0.5, reduction='mean'):
         super().__init__()
         self.W = float(W)
-        self.AWLoss = AdaptiveWingLoss(alpha, omega, epsilon, theta)
+        self.AWing = AdaptiveWingLoss(alpha, omega, epsilon, theta)
         self.reduction = reduction
 
-    def generate_weight_map(self, heatmap):
+    def generate_weight_map(self, y):
+        heatmap = torch.clone(y).cpu()
         weight_map = torch.zeros_like(heatmap)
         dilate = ndimage.grey_dilation(heatmap.numpy(), size=(3, 3, 3))
         weight_map[np.where(dilate > 0.2)] = 1
-        return weight_map
+        return weight_map.to('cuda' if torch.cuda.is_available() else 'cpu')
 
     def forward(self, y_pred, y):
         M = self.generate_weight_map(y)
-        Loss = self.AWLoss(y_pred, y)
-        weighted = Loss * (self.W * M + 1.)
+        loss = self.AWing(y_pred, y)
+        weighted = loss * (self.W * M + 1.)
         if self.reduction == 'sum':
             return weighted.sum()
         else:
