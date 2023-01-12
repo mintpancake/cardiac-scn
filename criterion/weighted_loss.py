@@ -35,9 +35,15 @@ class WeightedAdaptiveWingLoss(nn.Module):
         self.reduction = reduction
 
     def generate_weight_map(self, y):
+        '''
+        y: [c x l x w x h]
+        '''
         heatmap = torch.clone(y).cpu()
+        heatmap_numpy = heatmap.numpy()
         weight_map = torch.zeros_like(heatmap)
-        dilate = ndimage.grey_dilation(heatmap.numpy(), size=(3, 3, 3))
+        dilate = np.zeros_like(heatmap_numpy)
+        for i, h in enumerate(heatmap_numpy):
+            dilate[i] = ndimage.grey_dilation(h, size=(3, 3, 3))
         weight_map[np.where(dilate > 0.2)] = 1
         return weight_map.to('cuda' if torch.cuda.is_available() else 'cpu')
 
