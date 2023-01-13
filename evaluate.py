@@ -1,4 +1,5 @@
 import os
+import argparse
 import csv
 import numpy as np
 import torch
@@ -7,7 +8,7 @@ from dataset import EchoData
 from models.scn import SCN
 import utils
 
-pth_path = 'pths/tune/2023-01-08-00-03-49/50.pth'
+pth_path = 'pths/debug/2023-01-04-18-58-05/21-best.pth'
 meta_dir = 'data/meta/val/A2C'
 ijk_dir = 'data/meta/3d_ijk/A2C'
 structs = [0, 5, 25]
@@ -23,6 +24,7 @@ def save_txt(text, file):
 
 if __name__ == '__main__':
     time = utils.current_time()
+    os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, time+'.txt')
     open(save_path, 'w').close()
     save_txt(f'pth_path: {pth_path}', save_path)
@@ -81,6 +83,8 @@ if __name__ == '__main__':
 
             print(f'[{batch:>3d}/{size:>3d}] {dist}')
     dists = np.array(dists)
+    save_txt(f'[median] {np.median(dists)}', save_path)
+    print(f'[median] {np.median(dists)}')
     save_txt(f'[mean] {dists.mean()}', save_path)
     print(f'[mean] {dists.mean()}')
     save_txt(f'[std] {dists.std()}', save_path)
