@@ -35,9 +35,9 @@ if __name__ == '__main__':
     val_dataset = EchoData(val_meta_path, norm_echo=True,
                            norm_truth=True, augmentation=False)
     if use_val:
-        echo_data, truth_data, _ = val_dataset[data_index]
+        echo_data, truth_data, _s, _f = val_dataset[data_index]
     else:
-        echo_data, truth_data, _ = train_dataset[data_index]
+        echo_data, truth_data, _s, _f = train_dataset[data_index]
 
     draw(echo_data.cpu().numpy()[0][x], os.path.join(
         save_dir, 'echo.png'), mode='raw')
