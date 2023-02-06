@@ -59,6 +59,7 @@ class Trainer(object):
         self.optimizer = optim.AdamW(self.model.parameters(
         ), lr=config['lr'], weight_decay=config['weight_decay'])
         # self.optimizer = optim.Adam(self.model.parameters(), lr=config['lr'])
+        self.lr_scheduler = optim.lr_scheduler.StepLR(self.optimizer, 30, 0.1)
 
         self.total_train_step = 0
         self.total_val_step = 0
@@ -152,6 +153,7 @@ class Trainer(object):
 
             self.train()
             val_loss = self.eval()
+            self.lr_scheduler.step()
 
             if (t+1) % self.save_interval == 0:
                 pth_file_path = os.path.join(self.pth_path, f'{str(t+1)}.pth')
