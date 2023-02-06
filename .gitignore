@@ -136,6 +136,7 @@ dev/
 logs/
 pths/
 res/
+evaluation/
 images/
 *.pth
 *.nrrd

@@ -12,7 +12,7 @@ meta_dir = 'data/meta/test/A2C'
 ijk_dir = 'data/meta/3d_ijk/A2C'
 structs = [0, 5, 25]
 
-save_dir = 'res'
+save_dir = 'evaluation'
 
 
 def save_txt(text, file):
