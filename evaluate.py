@@ -1,5 +1,4 @@
 import os
-import argparse
 import csv
 import numpy as np
 import torch
@@ -8,8 +7,8 @@ from dataset import EchoData
 from models.scn import SCN
 import utils
 
-pth_path = 'pths/debug/2023-01-04-18-58-05/21-best.pth'
-meta_dir = 'data/meta/val/A2C'
+pth_path = 'pths/debug/2023-01-05-15-51-26/138-best.pth'
+meta_dir = 'data/meta/test/A2C'
 ijk_dir = 'data/meta/3d_ijk/A2C'
 structs = [0, 5, 25]
 
