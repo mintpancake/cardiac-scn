@@ -1,0 +1,15 @@
+{
+    "desc": "Test overfit",
+    "view": "A2C",
+    "pth_path": "pths/overfit",
+    "log_path": "logs/overfit",
+    "train_meta_path": "data/meta/overfit_test/A2C",
+    "val_meta_path": "data/meta/overfit_val/A2C",
+    "epochs": 100,
+    "batch_size": 1,
+    "lr": 1e-5,
+    "weight_decay": 5e-4,
+    "print_interval": 1,
+    "save_interval": 10,
+    "log_interval": 1
+}

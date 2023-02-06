@@ -1,5 +1,5 @@
 {
-    "desc": "AdaptiveWingLoss",
+    "desc": "StepLR",
     "view": "A2C",
     "pth_path": "pths/tune",
     "log_path": "logs/tune",
