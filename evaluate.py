@@ -7,12 +7,12 @@ from dataset import EchoData
 from models.scn import SCN
 import utils
 
-pth_path = 'pths/debug/2023-01-05-15-51-26/138-best.pth'
+pth_path = 'pths/tune/2023-02-06-15-53-33/100-latest.pth'
 meta_dir = 'data/meta/test/A2C'
 ijk_dir = 'data/meta/3d_ijk/A2C'
 structs = [0, 5, 25]
 
-save_dir = 'evaluation'
+save_dir = 'evaluation/A2C'
 
 
 def save_txt(text, file):

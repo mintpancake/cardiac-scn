@@ -1,5 +1,6 @@
 import json
 import os
+import math
 from datetime import datetime
 from PIL import Image
 import torch
@@ -87,3 +88,25 @@ def draw(data, filename, mode='clip'):
                 * 255.9).astype(np.uint8)
     image = Image.fromarray(int_data)
     image.save(filename)
+
+
+def fit_plane(xyz):
+    centroid = xyz.mean(axis=0)
+    xyzR = xyz - centroid
+    u, sigma, v = np.linalg.svd(xyzR)
+    normal = v[2]
+    normal = normal / np.linalg.norm(normal)
+    return centroid, normal
+
+
+def unit_vector(vector):
+    return vector / np.linalg.norm(vector)
+
+
+def angle_between(v1, v2, directed=False):
+    v1_u = unit_vector(v1)
+    v2_u = unit_vector(v2)
+    angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))/math.pi*180
+    if not directed and angle > 90.0:
+        angle = 180.0-angle
+    return angle
