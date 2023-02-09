@@ -96,7 +96,7 @@ def fit_plane(xyz):
     u, sigma, v = np.linalg.svd(xyzR)
     normal = v[2]
     normal = normal / np.linalg.norm(normal)
-    return centroid, normal
+    return (centroid, normal)
 
 
 def unit_vector(vector):
@@ -110,3 +110,10 @@ def angle_between(v1, v2, directed=False):
     if not directed and angle > 90.0:
         angle = 180.0-angle
     return angle
+
+
+def distance_to_plane(points, centroid, normal):
+    n = unit_vector(normal)
+    v = points-centroid
+    d = np.abs(v@n.T)
+    return d
