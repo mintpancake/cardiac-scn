@@ -7,7 +7,8 @@ CLEANUP_EXIST = True
 all_dir = 'data/meta/3d_truth'
 test_meta_path = 'data/meta/test/_TEST.txt'
 # views = ['A2C', 'A4C', 'SAXA', 'SAXB', 'ALAX', 'SAXMV', 'SAXM']
-views = ['A2C']
+views = ['A4C']
+train_val_dir = 'data/meta/train_val'
 train_dir = 'data/meta/train'
 val_dir = 'data/meta/val'
 test_dir = 'data/meta/test'
@@ -21,6 +22,7 @@ if __name__ == '__main__':
 
     for view in views:
         all_view_dir = os.path.join(all_dir, view)
+        train_val_view_dir = os.path.join(train_val_dir, view)
         train_view_dir = os.path.join(train_dir, view)
         val_view_dir = os.path.join(val_dir, view)
         test_view_dir = os.path.join(test_dir, view)
@@ -64,3 +66,6 @@ if __name__ == '__main__':
         for m in test_meta:
             os.system(f'cp {os.path.join(all_view_dir, m)} {test_view_dir}')
             print(f'{view} Test {m}')
+
+        os.system(f'cp -r {train_view_dir}/. {train_val_view_dir}')
+        os.system(f'cp -r {val_view_dir}/. {train_val_view_dir}')
