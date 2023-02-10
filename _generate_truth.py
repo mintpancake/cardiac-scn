@@ -18,7 +18,7 @@ SKIP_SAVED_NRRD = False
 #             'data/meta/3d_ijk/SAXB',
 #             'data/meta/3d_ijk/SAXM',
 #             'data/meta/3d_ijk/SAXMV']
-csv_dirs = ['data/meta/3d_ijk/A2C']
+csv_dirs = ['data/meta/3d_ijk/A4C']
 
 truth_save_dir = 'data/truth'
 meta_save_dir = 'data/meta/3d_truth'
@@ -119,19 +119,20 @@ if __name__ == '__main__':
 
             # Write meta
             for idx, struct_idx in enumerate(utils.VIEW_STRUCTS[view_name]):
+                truth_path = truth_save_path
                 if not csv_dict.get(struct_idx):
-                    truth_path = ''
+                    exist = False
                 else:
-                    truth_path = truth_save_path
+                    exist = True
                 if idx == 0:
                     with open(meta_save_path, 'w') as meta_file:
                         csv_writer = csv.writer(meta_file)
-                        csv_head = ['index', 'struct', 'echo', 'truth']
+                        csv_head = ['index', 'struct', 'echo', 'truth', 'exist']
                         csv_writer.writerow(csv_head)
-                        data_row = [idx, struct_idx, nrrd_path, truth_path]
+                        data_row = [idx, struct_idx, nrrd_path, truth_path, exist]
                         csv_writer.writerow(data_row)
                 else:
                     with open(meta_save_path, 'a+') as meta_file:
                         csv_writer = csv.writer(meta_file)
-                        data_row = [idx, struct_idx, nrrd_path, truth_path]
+                        data_row = [idx, struct_idx, nrrd_path, truth_path, exist]
                         csv_writer.writerow(data_row)
