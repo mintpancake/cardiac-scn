@@ -54,7 +54,8 @@ class EchoData(Dataset):
             echo_data).float()
         echo_data = torch.unsqueeze(echo_data, dim=0)
         truth_data = torch.from_numpy(truth_data).float()
-        structs = torch.IntTensor(sorted([row[1] for row in meta]))
+
+        structs = torch.IntTensor(sorted([row[1] for row in meta if row[4] == 'True']))
 
         return (echo_data, truth_data, structs, filename)
 
@@ -144,6 +145,6 @@ class EchoData(Dataset):
             for row in csv_reader:
                 if csv_reader.line_num == 1:
                     continue
-                meta.append([int(row[0]), int(row[1]), row[2], row[3]])
+                meta.append([int(row[0]), int(row[1]), row[2], row[3], row[4]])
             metas.append(meta)
         return metas
