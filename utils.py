@@ -29,12 +29,6 @@ VIEW_STRUCTS = {
 }
 
 
-def del_tensor_ele(arr, index):
-    arr1 = arr[0:index]
-    arr2 = arr[index+1:]
-    return torch.cat((arr1, arr2), dim=0)
-
-
 def ensure_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)

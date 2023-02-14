@@ -49,7 +49,8 @@ class Trainer(object):
         self.epochs = config['epochs']
         self.model = SCN(1, len(self.structs), filters=128,
                          factor=4, dropout=0.5).to(self.device)
-        self.loss_fn = WeightedAdaptiveWingLoss(reduction='sum').to(self.device)
+        self.loss_fn = WeightedAdaptiveWingLoss(
+            reduction='sum').to(self.device)
         # self.loss_fn = AdaptiveWingLoss(reduction='sum').to(self.device)
         # self.loss_fn = nn.MSELoss(reduction='sum').to(self.device)
         # self.loss_fn = nn.L1Loss(reduction='sum').to(self.device)
@@ -78,7 +79,6 @@ class Trainer(object):
             echo, truth = echo.to(self.device), truth.to(self.device)
             pred = self.model(echo)[0]
             loss = self.criterion(pred, truth, structs)
-            loss /= (truth.shape[0]*truth.shape[1])
             loss.backward()
             self.optimizer.step()
             self.optimizer.zero_grad()
@@ -108,12 +108,12 @@ class Trainer(object):
                 echo, truth = echo.to(self.device), truth.to(self.device)
                 pred = self.model(echo)[0]
                 loss = self.criterion(pred, truth, structs)
-                loss /= (truth.shape[0]*truth.shape[1])
                 val_loss += len(echo)*loss.item()
 
                 if batch % self.print_interval == 0:
                     loss_val, curr = loss.item(), batch*len(echo)
-                    self.print(f'valid: {loss_val:.9e} [{curr:>3d}/{size:>3d}]')
+                    self.print(
+                        f'valid: {loss_val:.9e} [{curr:>3d}/{size:>3d}]')
 
         val_loss /= size
         self.end_time = time.time()
@@ -131,17 +131,18 @@ class Trainer(object):
         loss = 0.0
         for i in range(len(pred)):
             if len(structs[i]) == len(self.structs):
-                loss += self.loss_fn(pred[i], truth[i])
+                loss += self.loss_fn(pred[i], truth[i])/len(structs[i])
             else:
-                diff = list(set(self.structs).difference(set(structs[i])))
-                diff_idx = [
-                    utils.VIEW_STRUCTS[self.view].index(_) for _ in diff]
-                pred_i, truth_i = pred[i], truth[i]
-                for j in diff_idx:
-                    pred_i = utils.del_tensor_ele(pred_i, j)
-                    truth_i = utils.del_tensor_ele(truth_i, j)
-                loss += self.loss_fn(pred_i, truth_i)
-        return loss
+                structs_idx = sorted(
+                    [utils.VIEW_STRUCTS[self.view].index(_) for _ in structs[i].tolist()])
+                structs_idx = torch.IntTensor(structs_idx)
+
+                pred_i = torch.index_select(pred[i], dim=0, index=structs_idx)
+                truth_i = torch.index_select(
+                    truth[i], dim=0, index=structs_idx)
+
+                loss += self.loss_fn(pred_i, truth_i)/len(structs[i])
+        return loss/len(pred)
 
     def start(self):
         self.print(f'Training on {self.device}...')
