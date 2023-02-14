@@ -135,7 +135,7 @@ class Trainer(object):
             else:
                 structs_idx = sorted(
                     [utils.VIEW_STRUCTS[self.view].index(_) for _ in structs[i].tolist()])
-                structs_idx = torch.IntTensor(structs_idx)
+                structs_idx = torch.IntTensor(structs_idx).to(self.device)
 
                 pred_i = torch.index_select(pred[i], dim=0, index=structs_idx)
                 truth_i = torch.index_select(
