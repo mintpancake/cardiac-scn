@@ -87,8 +87,7 @@ if __name__ == '__main__':
                     continue
                 truth_xyz.append([float(row[2]), float(row[3]), float(row[4])])
             truth_xyz = np.array(truth_xyz)
-            truth_centroid, truth_normal = ransac.ransac(
-                truth_xyz, fit_model, n, k, t, d)
+            truth_centroid, truth_normal = utils.fit_plane(truth_xyz)
 
             centroid_distance = np.sqrt(
                 np.sum((pred_centroid-truth_centroid)**2))

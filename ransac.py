@@ -93,7 +93,7 @@ def ransac(data, model, n, k, t, d, debug=False, return_all=False):
             print('test_err.min()', test_err.min())
             print('test_err.max()', test_err.max())
             print('np.mean(test_err)', np.mean(test_err))
-            print('iteration %d:len(alsoinliers) = %d' % (
+            print('iteration %d: len(alsoinliers)=%d' % (
                 iterations, len(alsoinliers)))
         if len(alsoinliers) >= d:
             betterdata = np.concatenate((maybeinliers, alsoinliers))
