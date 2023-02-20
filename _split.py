@@ -1,19 +1,23 @@
 import os
-import csv
+import argparse
 import numpy as np
 
 CLEANUP_EXIST = True
 
 all_dir = 'data/meta/3d_truth'
 test_meta_path = 'data/meta/test/_TEST.txt'
-# views = ['A2C', 'A4C', 'SAXA', 'SAXB', 'ALAX', 'SAXMV', 'SAXM']
-views = ['A4C']
 train_val_dir = 'data/meta/train_val'
 train_dir = 'data/meta/train'
 val_dir = 'data/meta/val'
 test_dir = 'data/meta/test'
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--views', type=str,
+                        help='A2C,A4C,SAXA,SAXB,ALAX,SAXMV,SAXM')
+    args = parser.parse_args()
+    views = [v.strip() for v in args.views.split(',')]
+
     # Read predetermined test data
     test_filenames = set()
     with open(test_meta_path) as file:

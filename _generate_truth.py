@@ -1,6 +1,7 @@
 import os
 import nrrd
 import csv
+import argparse
 import math
 import numpy as np
 from scipy.stats import multivariate_normal
@@ -10,15 +11,6 @@ MAX_VAL = 1
 GAMMA = 1000
 NRRD_OUT_SIZE = [128, 128, 128]
 SKIP_SAVED_NRRD = False
-
-# csv_dirs = ['data/meta/3d_ijk/A2C',
-#             'data/meta/3d_ijk/A4C',
-#             'data/meta/3d_ijk/ALAX',
-#             'data/meta/3d_ijk/SAXA',
-#             'data/meta/3d_ijk/SAXB',
-#             'data/meta/3d_ijk/SAXM',
-#             'data/meta/3d_ijk/SAXMV']
-csv_dirs = ['data/meta/3d_ijk/A4C']
 
 truth_save_dir = 'data/truth'
 meta_save_dir = 'data/meta/3d_truth'
@@ -75,6 +67,12 @@ def gaussian_excitation(mean: list,
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--views', type=str,
+                        help='A2C,A4C,SAXA,SAXB,ALAX,SAXMV,SAXM')
+    args = parser.parse_args()
+    csv_dirs = [f'data/meta/3d_ijk/{v.strip()}' for v in args.views.split(',')]
+
     all_dirs = len(csv_dirs)
     for (processed_dirs, csv_dir) in enumerate(csv_dirs):
         csv_filenames = os.listdir(csv_dir)

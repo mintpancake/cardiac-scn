@@ -1,5 +1,6 @@
 import os
 import csv
+import argparse
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
@@ -7,23 +8,35 @@ from dataset import EchoData
 from models.scn import SCN
 import utils
 
-pth_path = 'pths/tune/2023-02-06-15-53-33/100-latest.pth'
-meta_dir = 'data/meta/test/A2C'
-ijk_dir = 'data/meta/3d_ijk/A2C'
-structs = [0, 5, 25]
-
-save_dir = 'res/svd/A2C'
-
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--view', type=str, help='A2C')
+    parser.add_argument('--dataset', type=str, help='test')
+    parser.add_argument('--pth_path', type=str,
+                        help='pths/A2C/2023-01-01-00-00-00/100.pth')
+    args = parser.parse_args()
+    view = args.view
+    dataset = args.dataset
+    pth_path = args.pth_path
+    meta_dir = f'data/meta/{dataset}/{view}'
+    ijk_dir = f'data/meta/3d_ijk/{view}'
+    structs = utils.VIEW_STRUCTS[view]
+    save_dir = f'res/svd/{view}'
+
     time = utils.current_time()
     os.makedirs(save_dir, exist_ok=True)
-    save_path = os.path.join(save_dir, time+'.csv')
+    save_path = os.path.join(save_dir, f'{time}_fit.csv')
+    error_path = os.path.join(save_dir, f'{time}_err.csv')
     with open(save_path, 'w') as file:
         writer = csv.writer(file)
         header = ['name', 'p_centroid', 't_centroid', 'centroid_dist',
                   'p_normal', 't_normal', 'normal_angle']
         writer.writerow(header)
+    with open(error_path, 'w') as file:
+        error_writer = csv.writer(file)
+        header = ['name', 'struct', 'distance']
+        error_writer.writerow(header)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -73,6 +86,14 @@ if __name__ == '__main__':
                 data_row = [filename[0], pred_centroid, truth_centroid,
                             centroid_distance, pred_normal, truth_normal, normal_angle]
                 writer.writerow(data_row)
+
+            error_distances = utils.distance_to_plane(
+                pred_xyz, pred_centroid, pred_normal)
+            for i, struct in enumerate(structs):
+                with open(error_path, 'a+') as file:
+                    error_writer = csv.writer(file)
+                    data_row = [filename[0], struct, error_distances[i]]
+                    error_writer.writerow(data_row)
 
             centroid_error.append(centroid_distance)
             normal_error.append(normal_angle)

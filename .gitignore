@@ -141,5 +141,6 @@ evaluation/
 images/
 *.pth
 *.nrrd
+*.sh
 events.*
 *dev*

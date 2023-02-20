@@ -1,18 +1,12 @@
 import os
 import csv
+import argparse
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from dataset import EchoData
 from models.scn import SCN
 import utils
-
-pth_path = 'pths/tune/2023-02-06-15-53-33/100-latest.pth'
-meta_dir = 'data/meta/test/A2C'
-ijk_dir = 'data/meta/3d_ijk/A2C'
-structs = [0, 5, 25]
-
-save_dir = 'evaluation/A2C'
 
 
 def save_txt(text, file):
@@ -22,6 +16,20 @@ def save_txt(text, file):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--view', type=str, help='A2C')
+    parser.add_argument('--dataset', type=str, help='test')
+    parser.add_argument('--pth_path', type=str,
+                        help='pths/A2C/2023-01-01-00-00-00/100.pth')
+    args = parser.parse_args()
+    view = args.view
+    dataset = args.dataset
+    pth_path = args.pth_path
+    meta_dir = f'data/meta/{dataset}/{view}'
+    ijk_dir = f'data/meta/3d_ijk/{view}'
+    structs = utils.VIEW_STRUCTS[view]
+    save_dir = f'evaluation/{view}'
+
     time = utils.current_time()
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, time+'.txt')
@@ -75,7 +83,8 @@ if __name__ == '__main__':
                     dist += np.sqrt(np.sum((t_xyz-p_xyz)**2))
             dist /= num
             dists.append(dist)
-            save_txt(f'[{batch:>3d}/{size:>3d}] {filename[0]} {dist}', save_path)
+            save_txt(
+                f'[{batch:>3d}/{size:>3d}] {filename[0]} {dist}', save_path)
             save_txt(truth_xyz, save_path)
             save_txt(pred_xyz, save_path)
             save_txt('', save_path)
