@@ -9,19 +9,23 @@ from models.scn import SCN
 import utils
 import ransac
 
-n, k, t, d = 3, 10, 10, 3
-# n - the minimum number of data values required to fit the model
-# k - the maximum number of iterations allowed in the algorithm
-# t - a threshold value for determining when a data point fits a model
-# d - the number of close data values required to assert that a model fits well to data
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--n', type=int, help='the minimum number of data values required to fit the model')
+    parser.add_argument(
+        '--k', type=int, help='the maximum number of iterations allowed in the algorithm')
+    parser.add_argument(
+        '--t', type=float, help='a threshold value for determining when a data point fits a model')
+    parser.add_argument(
+        '--d', type=int, help='the number of close data values required to assert that a model fits well to data')
     parser.add_argument('--view', type=str, help='A2C')
     parser.add_argument('--dataset', type=str, help='test')
     parser.add_argument('--pth_path', type=str,
                         help='pths/A2C/2023-01-01-00-00-00/100.pth')
     args = parser.parse_args()
+    n, k, t, d = args.n, args.k, args.t, args.d
     view = args.view
     dataset = args.dataset
     pth_path = args.pth_path
