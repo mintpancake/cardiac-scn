@@ -97,7 +97,7 @@ if __name__ == '__main__':
                 writer.writerow(data_row)
 
             error_distances = utils.distance_to_plane(
-                pred_xyz, pred_centroid, pred_normal)
+                pred_xyz, pred_centroid, pred_normal)**2
             for i, struct in enumerate(structs):
                 with open(error_path, 'a+') as file:
                     error_writer = csv.writer(file)
