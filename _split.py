@@ -30,10 +30,12 @@ if __name__ == '__main__':
         train_view_dir = os.path.join(train_dir, view)
         val_view_dir = os.path.join(val_dir, view)
         test_view_dir = os.path.join(test_dir, view)
+        os.makedirs(train_val_view_dir, exist_ok=True)
         os.makedirs(train_view_dir, exist_ok=True)
         os.makedirs(val_view_dir, exist_ok=True)
         os.makedirs(test_view_dir, exist_ok=True)
         if CLEANUP_EXIST:
+            os.system(f'rm -rf {train_val_view_dir}/*')
             os.system(f'rm -rf {train_view_dir}/*')
             os.system(f'rm -rf {val_view_dir}/*')
             os.system(f'rm -rf {test_view_dir}/*')
