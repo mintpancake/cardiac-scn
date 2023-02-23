@@ -3,7 +3,6 @@ import os
 import math
 from datetime import datetime
 from PIL import Image
-import torch
 import numpy as np
 
 STRUCTS = ['A2C-LV apex', 'A4C-LV apex', 'A4C-TV tip', 'ALAX-LV apex', 'Anterior mitral annulus', 'Anterolateral mitral annulus',

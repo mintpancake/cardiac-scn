@@ -9,12 +9,6 @@ from models.scn import SCN
 import utils
 
 
-def save_txt(text, file):
-    f = open(file, 'a+')
-    f.write(str(text)+'\n')
-    f.close()
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--view', type=str, help='A2C')
@@ -32,12 +26,13 @@ if __name__ == '__main__':
 
     time = utils.current_time()
     os.makedirs(save_dir, exist_ok=True)
-    save_path = os.path.join(save_dir, time+'.txt')
-    open(save_path, 'w').close()
-    save_txt(f'pth_path: {pth_path}', save_path)
-    save_txt(f'meta_dir: {meta_dir}', save_path)
-    save_txt(f'ijk_dir: {ijk_dir}', save_path)
-    save_txt('', save_path)
+    save_path = os.path.join(save_dir, time+'.csv')
+    with open(save_path, 'w') as file:
+        writer = csv.writer(file)
+        header = ['name (landmark)', 'truth_x', 'truth_y', 'truth_z',
+                  'pred_x', 'pred_y', 'pred_z', 'euclidean_distance']
+        writer.writerow(header)
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     dataset = EchoData(meta_dir, norm_echo=True,
@@ -73,27 +68,35 @@ if __name__ == '__main__':
                 truth_xyz[int(row[1])] = (
                     float(row[2]), float(row[3]), float(row[4]))
 
-            dist = 0.0
-            num = 0
-            for st in structs:
-                if truth_xyz.get(st):
-                    num += 1
-                    t_xyz = np.array(truth_xyz[st])
-                    p_xyz = np.array(pred_xyz[st])
-                    dist += np.sqrt(np.sum((t_xyz-p_xyz)**2))
-            dist /= num
-            dists.append(dist)
-            save_txt(
-                f'[{batch:>3d}/{size:>3d}] {filename[0]} {dist}', save_path)
-            save_txt(truth_xyz, save_path)
-            save_txt(pred_xyz, save_path)
-            save_txt('', save_path)
+            with open(save_path, 'a+') as file:
+                writer = csv.writer(file)
+                print(f'[{batch:>3d}/{size:>3d}]', end=' ')
+                for st in structs:
+                    t_xyz = truth_xyz.get(st)
+                    p_xyz = pred_xyz[st]
+                    row = [f'{filename[0]} ({st})']
+                    if t_xyz:
+                        row.extend(t_xyz)
+                        t_xyz_ndarray = np.array(t_xyz)
+                        p_xyz_ndarray = np.array(p_xyz)
+                        dist = np.sqrt(
+                            np.sum((t_xyz_ndarray-p_xyz_ndarray)**2)).item()
+                        dists.append(dist)
+                    else:
+                        row.extend(['', '', ''])
+                        dist = ''
+                    row.extend(p_xyz)
+                    row.append(dist)
+                    writer.writerow(row)
+                    print(dist, end=' ')
+                print()
 
-            print(f'[{batch:>3d}/{size:>3d}] {dist}')
     dists = np.array(dists)
-    save_txt(f'[median] {np.median(dists)}', save_path)
+    with open(save_path, 'a+') as file:
+        writer = csv.writer(file)
+        writer.writerow(['[median]', '', '', '', '', '', '', np.median(dists)])
+        writer.writerow(['[mean]', '', '', '', '', '', '', dists.mean()])
+        writer.writerow(['[std]', '', '', '', '', '', '', dists.std()])
     print(f'[median] {np.median(dists)}')
-    save_txt(f'[mean] {dists.mean()}', save_path)
     print(f'[mean] {dists.mean()}')
-    save_txt(f'[std] {dists.std()}', save_path)
     print(f'[std] {dists.std()}')
