@@ -1,0 +1,32 @@
+0: A2C-LV apex
+1: A4C-LV apex
+2: A4C-TV tip
+3: ALAX-LV apex
+4: Anterior mitral annulus
+5: Anterolateral mitral annulus
+6: Anterolateral papillary muscle
+7: Aortic annulus
+8: Center of AV
+9: IAS
+10: IVS
+11: IW
+12: Interventricular septum
+13: LV
+14: Lateral mitral annulus
+15: MV anterior leaflet  A2
+16: MV anterior leaflet  A3
+17: MV anterior leaflet A1
+18: MV posterior leaflet P1
+19: MV posterior leaflet P2
+20: MV posterior leaflet P3
+21: MV tip
+22: Medial mitral annulus
+23: PV tip
+24: Posterior mitral annulus
+25: Posteromedial mitral annulus
+26: Posteromedial papillary muscle
+27: RV
+28: RV apex
+29: SAXA-LV apex
+30: SAXB-TV tip
+31: Tricuspid annulus.
