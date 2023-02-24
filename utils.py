@@ -88,6 +88,8 @@ def fit_plane(xyz):
     xyzR = xyz - centroid
     u, sigma, v = np.linalg.svd(xyzR)
     normal = v[2]
+    if normal[2] < 0.0:
+        normal = -normal
     normal = normal / np.linalg.norm(normal)
     return (centroid, normal)
 
