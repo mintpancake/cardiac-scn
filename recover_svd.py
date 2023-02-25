@@ -6,7 +6,9 @@ import torch
 from torch.utils.data import DataLoader
 from dataset import EchoData
 from models.scn import SCN
+import nrrd
 import utils
+from visualize import render_cross_section
 
 
 if __name__ == '__main__':
@@ -22,12 +24,12 @@ if __name__ == '__main__':
     meta_dir = f'data/meta/{dataset}/{view}'
     ijk_dir = f'data/meta/3d_ijk/{view}'
     structs = utils.VIEW_STRUCTS[view]
-    save_dir = f'res/svd/{view}'
+    save_dir = f'results/{view}'
 
-    time = utils.current_time()
     os.makedirs(save_dir, exist_ok=True)
-    save_path = os.path.join(save_dir, f'{time}_fit.csv')
-    error_path = os.path.join(save_dir, f'{time}_err.csv')
+    save_path = os.path.join(save_dir, f'fit.csv')
+    error_path = os.path.join(save_dir, f'err.csv')
+    image_path = os.path.join(save_dir, 'images')
     with open(save_path, 'w') as file:
         writer = csv.writer(file)
         header = ['name', 'p_centroid', 't_centroid', 'centroid_dist',
@@ -67,12 +69,15 @@ if __name__ == '__main__':
             pred_xyz = np.array(pred_xyz)
             pred_centroid, pred_normal = utils.fit_plane(pred_xyz)
 
+            truth_nrrd_path = None
             truth_xyz = []
             file_path = os.path.join(ijk_dir, filename[0]+'.csv')
             reader = csv.reader(open(file_path, 'r'))
             for row in reader:
                 if reader.line_num == 1:
                     continue
+                elif reader.line_num == 2:
+                    truth_nrrd_path = row[0]
                 truth_xyz.append([float(row[2]), float(row[3]), float(row[4])])
             truth_xyz = np.array(truth_xyz)
             truth_centroid, truth_normal = utils.fit_plane(truth_xyz)
@@ -97,6 +102,17 @@ if __name__ == '__main__':
 
             centroid_error.append(centroid_distance)
             normal_error.append(normal_angle)
+
+            nrrd_data = nrrd.read(truth_nrrd_path)[0].astype(np.float64)
+            pred_image = render_cross_section(
+                nrrd_data, pred_centroid, pred_normal)
+            truth_image = render_cross_section(
+                nrrd_data, truth_centroid, truth_normal)
+            utils.draw(pred_image, os.path.join(
+                image_path, f'{filename[0]}_pred.png'))
+            utils.draw(truth_image, os.path.join(
+                image_path, f'{filename[0]}_truth.png'))
+
             print(f'[{batch:>3d}/{size:>3d}] {centroid_distance} {normal_angle}')
     centroid_error = np.array(centroid_error)
     normal_error = np.array(normal_error)
