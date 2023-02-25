@@ -74,6 +74,9 @@ def get_view_index(name, type='abbr'):
 
 
 def draw(data, filename, mode='clip'):
+    path = os.path.split(filename)[0]
+    ensure_dir(path)
+
     if mode == 'clip':
         data[data < 0.0] = 0.0
 
