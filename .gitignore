@@ -137,6 +137,7 @@ _dev/
 logs/
 pths/
 res/
+results/
 evaluation/
 images/
 *.pth
