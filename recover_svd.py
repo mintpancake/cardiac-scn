@@ -124,3 +124,6 @@ if __name__ == '__main__':
                         '', '', normal_error.mean()])
         writer.writerow(['[std]', '', '', centroid_error.std(),
                         '', '', normal_error.std()])
+    print(f'[median] {np.median(centroid_error)} {np.median(normal_error)}')
+    print(f'[mean] {centroid_error.mean()} {normal_error.mean()}')
+    print(f'[std] {centroid_error.std()} {normal_error.std()}')
