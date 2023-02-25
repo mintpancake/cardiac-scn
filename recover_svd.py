@@ -118,5 +118,9 @@ if __name__ == '__main__':
     normal_error = np.array(normal_error)
     with open(save_path, 'a+') as file:
         writer = csv.writer(file)
-        writer.writerow(
-            [f'Centroid Distance: [median]{np.median(centroid_error)} [mean]{centroid_error.mean()} [std]{centroid_error.std()}, Normal Angle: [median]{np.median(normal_error)} [mean]{normal_error.mean()} [std]{normal_error.std()}'])
+        writer.writerow(['[median]', '', '', np.median(
+            centroid_error), '', '', np.median(normal_error)])
+        writer.writerow(['[mean]', '', '', centroid_error.mean(),
+                        '', '', normal_error.mean()])
+        writer.writerow(['[std]', '', '', centroid_error.std(),
+                        '', '', normal_error.std()])
