@@ -62,7 +62,7 @@ if __name__ == '__main__':
     size = len(loader)
     with torch.no_grad():
         for batch, (echo, truth, struct, filename) in enumerate(loader):
-            echo, truth = echo.to(device), truth.to(device)
+            echo = echo.to(device)
             pred = model(echo)[0][0]
 
             pred_xyz = []
