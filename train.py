@@ -14,7 +14,12 @@ import utils
 
 
 class Trainer(object):
-    def __init__(self, config):
+    def __init__(self, config, cont=False, cont_path='', cont_epoch=0):
+        # continue training
+        self.cont = cont
+        self.cont_path = cont_path
+        self.cont_epoch = cont_epoch
+
         self.init_time = utils.current_time()
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.view = config['view']
@@ -49,6 +54,8 @@ class Trainer(object):
         self.epochs = config['epochs']
         self.model = SCN(1, len(self.structs), filters=128,
                          factor=4, dropout=0.5).to(self.device)
+        if self.cont:
+            self.model.load_state_dict(torch.load(self.cont_path))
         self.loss_fn = WeightedAdaptiveWingLoss(
             reduction='sum').to(self.device)
         # self.loss_fn = AdaptiveWingLoss(reduction='sum').to(self.device)
@@ -147,8 +154,15 @@ class Trainer(object):
     def start(self):
         self.print(f'Training on {self.device}...')
         self.start_time = time.time()
+        start_epoch = 0
+        if self.cont:
+            start_epoch = self.cont_epoch
+            for t in range(start_epoch):
+                self.lr_scheduler.step()
+            self.print(
+                f'Continue training from epoch {start_epoch+1} with lr={self.lr_scheduler.get_last_lr()}...')
 
-        for t in range(self.epochs):
+        for t in range(start_epoch, self.epochs):
             self.print(
                 f'Epoch {t+1} ({utils.current_time()})\n------------------------------')
 
@@ -188,8 +202,16 @@ class Trainer(object):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Cardiac SCN Trainer')
-    parser.add_argument(
-        '--config', type=str, default='configs/default.json', help='configuration path')
+    parser.add_argument('--config', type=str,
+                        default='configs/default.json',
+                        help='configuration path')
+    parser.add_argument('--cont', type=bool,
+                        default=False, help='continue training')
+    parser.add_argument('--cont_pth', type=str,
+                        default='', help='continue checkpoint path')
+    parser.add_argument('--cont_epoch', type=int,
+                        default=0, help='continue start epoch')
     args = parser.parse_args()
-    trainer = Trainer(utils.load_config(args.config))
+    trainer = Trainer(utils.load_config(args.config), cont=args.cont,
+                      cont_path=args.cont_pth, cont_epoch=args.cont_epoch)
     trainer.start()
