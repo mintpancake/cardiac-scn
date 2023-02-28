@@ -37,9 +37,9 @@ class Trainer(object):
         self.log_path = os.path.join(config['log_path'], self.init_time)
         os.makedirs(self.pth_path, exist_ok=True)
         os.makedirs(self.log_path, exist_ok=True)
-        with open(os.path.join(self.pth_path, '_CONFIG.json'), 'w') as f:
+        with open(os.path.join(self.pth_path, 'config.json'), 'w') as f:
             json.dump(config, f, indent=4)
-        with open(os.path.join(self.log_path, '_CONFIG.json'), 'w') as f:
+        with open(os.path.join(self.log_path, 'config.json'), 'w') as f:
             json.dump(config, f, indent=4)
         self.logger = SummaryWriter(self.log_path)
         self.console_path = os.path.join(self.log_path, 'console_history.txt')
