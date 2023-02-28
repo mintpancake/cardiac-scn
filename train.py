@@ -26,6 +26,8 @@ class Trainer(object):
                 exit()
 
         self.init_time = utils.current_time()
+        if self.resume:
+            self.init_time = self.ckpt['init_time']
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.view = config['view']
         self.structs = torch.IntTensor(sorted(utils.VIEW_STRUCTS[self.view]))
@@ -37,14 +39,15 @@ class Trainer(object):
         self.log_path = os.path.join(config['log_path'], self.init_time)
         os.makedirs(self.pth_path, exist_ok=True)
         os.makedirs(self.log_path, exist_ok=True)
-        with open(os.path.join(self.pth_path, 'config.json'), 'w') as f:
-            json.dump(config, f, indent=4)
-        with open(os.path.join(self.log_path, 'config.json'), 'w') as f:
-            json.dump(config, f, indent=4)
         self.logger = SummaryWriter(self.log_path)
         self.console_path = os.path.join(self.log_path, 'console_history.txt')
-        console_file = open(self.console_path, 'w')
-        console_file.close()
+        if not self.resume:
+            with open(os.path.join(self.pth_path, 'config.json'), 'w') as f:
+                json.dump(config, f, indent=4)
+            with open(os.path.join(self.log_path, 'config.json'), 'w') as f:
+                json.dump(config, f, indent=4)
+            console_file = open(self.console_path, 'w')
+            console_file.close()
 
         self.train_data = EchoData(config['train_meta_path'], norm_echo=True,
                                    norm_truth=True, augmentation=True)
@@ -173,7 +176,7 @@ class Trainer(object):
         if self.resume:
             start_epoch = self.ckpt['epoch']
             self.print(
-                f'Continue training from epoch {start_epoch+1} with lr={self.lr_scheduler.get_last_lr()}...')
+                f'Resume training from epoch {start_epoch+1} with lr={self.lr_scheduler.get_last_lr()}...')
 
         for t in range(start_epoch, self.epochs):
             self.print(
@@ -195,6 +198,7 @@ class Trainer(object):
                     'total_val_step': self.total_val_step,
                     'last_val_loss': self.last_val_loss,
                     'best_epoch': self.best_epoch,
+                    'init_time': self.init_time,
                 }
                 torch.save(ckpt_dict, pth_file_path)
                 self.print(f'Checkpoint saved to {pth_file_path}...')
@@ -216,6 +220,7 @@ class Trainer(object):
                     'total_val_step': self.total_val_step,
                     'last_val_loss': self.last_val_loss,
                     'best_epoch': self.best_epoch,
+                    'init_time': self.init_time,
                 }
                 torch.save(ckpt_dict, pth_file_path)
                 self.print(f'Best checkpoint saved to {pth_file_path}...')
@@ -232,6 +237,7 @@ class Trainer(object):
             'total_val_step': self.total_val_step,
             'last_val_loss': self.last_val_loss,
             'best_epoch': self.best_epoch,
+            'init_time': self.init_time,
         }
         torch.save(ckpt_dict, pth_file_path)
 
@@ -252,7 +258,7 @@ if __name__ == '__main__':
                         default='configs/default.json',
                         help='configuration path')
     parser.add_argument('--ckpt', type=str,
-                        default=None, help='continue checkpoint path')
+                        default=None, help='resume checkpoint path')
     args = parser.parse_args()
     trainer = Trainer(utils.load_config(args.config), ckpt_path=args.ckpt)
     trainer.start()
