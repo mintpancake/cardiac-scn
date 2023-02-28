@@ -19,7 +19,11 @@ class Trainer(object):
         self.resume = False
         if ckpt_path is not None and ckpt_path != '':
             self.resume = True
-            self.ckpt = torch.load(ckpt_path)
+            try:
+                self.ckpt = torch.load(ckpt_path)
+            except Exception:
+                print('Error: cannot load checkpoint!')
+                exit()
 
         self.init_time = utils.current_time()
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
