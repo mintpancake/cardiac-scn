@@ -14,11 +14,12 @@ import utils
 
 
 class Trainer(object):
-    def __init__(self, config, cont=False, cont_path='', cont_epoch=0):
+    def __init__(self, config, ckpt_path=None):
         # continue training
-        self.cont = cont
-        self.cont_path = cont_path
-        self.cont_epoch = cont_epoch
+        self.resume = False
+        if ckpt_path is not None and ckpt_path != '':
+            self.resume = True
+            self.ckpt = torch.load(ckpt_path)
 
         self.init_time = utils.current_time()
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -41,21 +42,21 @@ class Trainer(object):
         console_file = open(self.console_path, 'w')
         console_file.close()
 
-        self.train_data = EchoData(
-            config['train_meta_path'], norm_echo=True, norm_truth=True, augmentation=True)
-        self.val_data = EchoData(
-            config['val_meta_path'], norm_echo=True, norm_truth=True, augmentation=False)
+        self.train_data = EchoData(config['train_meta_path'], norm_echo=True,
+                                   norm_truth=True, augmentation=True)
+        self.val_data = EchoData(config['val_meta_path'], norm_echo=True,
+                                 norm_truth=True, augmentation=False)
 
-        self.train_loader = DataLoader(
-            self.train_data, batch_size=config['batch_size'], shuffle=True, drop_last=False, num_workers=8)
-        self.val_loader = DataLoader(
-            self.val_data, batch_size=config['batch_size'], shuffle=False, drop_last=False, num_workers=8)
+        self.train_loader = DataLoader(self.train_data, batch_size=config['batch_size'],
+                                       shuffle=True, drop_last=False, num_workers=8)
+        self.val_loader = DataLoader(self.val_data, batch_size=config['batch_size'],
+                                     shuffle=False, drop_last=False, num_workers=8)
 
         self.epochs = config['epochs']
         self.model = SCN(1, len(self.structs), filters=128,
                          factor=4, dropout=0.5).to(self.device)
-        if self.cont:
-            self.model.load_state_dict(torch.load(self.cont_path))
+        if self.resume:
+            self.model.load_state_dict(self.ckpt['model_state_dict'])
         self.loss_fn = WeightedAdaptiveWingLoss(
             reduction='sum').to(self.device)
         # self.loss_fn = AdaptiveWingLoss(reduction='sum').to(self.device)
@@ -66,15 +67,25 @@ class Trainer(object):
         # ), lr=config['lr'], momentum=0.99, nesterov=True, weight_decay=config['weight_decay'])
         self.optimizer = optim.AdamW(self.model.parameters(
         ), lr=config['lr'], weight_decay=config['weight_decay'])
+        if self.resume:
+            self.optimizer.load_state_dict(self.ckpt['optimizer_state_dict'])
         # self.optimizer = optim.Adam(self.model.parameters(), lr=config['lr'])
         self.lr_scheduler = optim.lr_scheduler.StepLR(self.optimizer, 30, 0.1)
+        if self.resume:
+            self.lr_scheduler.load_state_dict(
+                self.ckpt['lr_scheduler_state_dict'])
 
-        self.total_train_step = 0
-        self.total_val_step = 0
         self.start_time = 0.0
         self.end_time = 0.0
+        self.total_train_step = 0
+        self.total_val_step = 0
         self.last_val_loss = float('inf')
         self.best_epoch = 0
+        if self.resume:
+            self.total_train_step = self.ckpt['total_train_step']
+            self.total_val_step = self.ckpt['total_val_step']
+            self.last_val_loss = self.ckpt['last_val_loss']
+            self.best_epoch = self.ckpt['best_epoch']
 
     def train(self):
         self.print('Train loss:')
@@ -155,10 +166,8 @@ class Trainer(object):
         self.print(f'Training on {self.device}...')
         self.start_time = time.time()
         start_epoch = 0
-        if self.cont:
-            start_epoch = self.cont_epoch
-            for t in range(start_epoch):
-                self.lr_scheduler.step()
+        if self.resume:
+            start_epoch = self.ckpt['epoch']
             self.print(
                 f'Continue training from epoch {start_epoch+1} with lr={self.lr_scheduler.get_last_lr()}...')
 
@@ -169,10 +178,22 @@ class Trainer(object):
             self.train()
             val_loss = self.eval()
             self.lr_scheduler.step()
+            self.print(f'lr decreased to {self.lr_scheduler.get_last_lr()}')
 
             if (t+1) % self.save_interval == 0:
                 pth_file_path = os.path.join(self.pth_path, f'{str(t+1)}.pth')
-                torch.save(self.model.state_dict(), pth_file_path)
+                ckpt_dict = {
+                    'epoch': t,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict': self.optimizer.state_dict(),
+                    'lr_scheduler_state_dict': self.lr_scheduler.state_dict(),
+                    'total_train_step': self.total_train_step,
+                    'total_val_step': self.total_val_step,
+                    'last_val_loss': self.last_val_loss,
+                    'best_epoch': self.best_epoch,
+                }
+                torch.save(ckpt_dict, pth_file_path)
+                self.print(f'Checkpoint saved to {pth_file_path}...')
 
             if val_loss <= self.last_val_loss:
                 pth_file_path = os.path.join(
@@ -182,15 +203,36 @@ class Trainer(object):
                 self.best_epoch = t+1
                 pth_file_path = os.path.join(
                     self.pth_path, f'{self.best_epoch}-best.pth')
-                torch.save(self.model.state_dict(), pth_file_path)
+                ckpt_dict = {
+                    'epoch': t,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict': self.optimizer.state_dict(),
+                    'lr_scheduler_state_dict': self.lr_scheduler.state_dict(),
+                    'total_train_step': self.total_train_step,
+                    'total_val_step': self.total_val_step,
+                    'last_val_loss': self.last_val_loss,
+                    'best_epoch': self.best_epoch,
+                }
+                torch.save(ckpt_dict, pth_file_path)
+                self.print(f'Best checkpoint saved to {pth_file_path}...')
                 self.last_val_loss = val_loss
 
         pth_file_path = os.path.join(
             self.pth_path, f'{self.epochs}-latest.pth')
-        torch.save(self.model.state_dict(), pth_file_path)
+        ckpt_dict = {
+            'epoch': t,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'lr_scheduler_state_dict': self.lr_scheduler.state_dict(),
+            'total_train_step': self.total_train_step,
+            'total_val_step': self.total_val_step,
+            'last_val_loss': self.last_val_loss,
+            'best_epoch': self.best_epoch,
+        }
+        torch.save(ckpt_dict, pth_file_path)
 
         self.print(
-            f'Completed {self.epochs} epochs; saved in "{self.pth_path}"')
+            f'Completed {self.epochs} epochs\nLatest checkpoint saved to {pth_file_path}')
         self.logger.close()
 
     def print(self, text):
@@ -205,13 +247,8 @@ if __name__ == '__main__':
     parser.add_argument('--config', type=str,
                         default='configs/default.json',
                         help='configuration path')
-    parser.add_argument('--cont', type=bool,
-                        default=False, help='continue training')
-    parser.add_argument('--cont_pth', type=str,
-                        default='', help='continue checkpoint path')
-    parser.add_argument('--cont_epoch', type=int,
-                        default=0, help='continue start epoch')
+    parser.add_argument('--ckpt', type=str,
+                        default=None, help='continue checkpoint path')
     args = parser.parse_args()
-    trainer = Trainer(utils.load_config(args.config), cont=args.cont,
-                      cont_path=args.cont_pth, cont_epoch=args.cont_epoch)
+    trainer = Trainer(utils.load_config(args.config), ckpt_path=args.ckpt)
     trainer.start()
