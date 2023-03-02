@@ -143,7 +143,7 @@ class Trainer(object):
         val_loss /= size
         self.end_time = time.time()
         self.print(f'valid: {val_loss:.9e} [average]')
-        self.print(f'Time: {(self.end_time - self.start_time):>8f}\n')
+        self.print(f'Time: {(self.end_time - self.start_time):>8f}')
         self.total_val_step += 1
 
         if self.total_val_step % self.log_interval == 0:
@@ -176,16 +176,16 @@ class Trainer(object):
         if self.resume:
             start_epoch = self.ckpt['epoch']
             self.print(
-                f'Resume training from epoch {start_epoch+1} with lr={self.lr_scheduler.get_last_lr()}...')
+                f'Resume training from epoch {start_epoch+1} with LR={self.lr_scheduler.get_last_lr()}...')
 
         for t in range(start_epoch, self.epochs):
+            self.print('')
             self.print(
                 f'Epoch {t+1} ({utils.current_time()})\n------------------------------')
 
             self.train()
             val_loss = self.eval()
             self.lr_scheduler.step()
-            self.print(f'lr decreased to {self.lr_scheduler.get_last_lr()}')
 
             if (t+1) % self.save_interval == 0:
                 pth_file_path = os.path.join(self.pth_path, f'{str(t+1)}.pth')
