@@ -10,29 +10,24 @@ import nrrd
 import utils
 from visualize import render_cross_section
 
-PV_TIP = 23
 
-# ignore 23 PV tip
+# use SAXM SAXMV for normal vector
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--view', type=str, help='SAXB')
+    parser.add_argument('--view', type=str, help='A2C')
     parser.add_argument('--dataset', type=str, help='test')
     parser.add_argument('--pth_path', type=str,
-                        help='pths/SAXB/2023-01-01-00-00-00/100.pth')
+                        help='pths/A2C/2023-01-01-00-00-00/100.pth')
     parser.add_argument('model_key', type=str, default=None, help='model key')
     args = parser.parse_args()
     view = args.view
-    if view != 'SAXB':
-        raise ValueError('only SAXB')
     dataset = args.dataset
     pth_path = args.pth_path
     model_key = args.model_key
     meta_dir = f'data/meta/{dataset}/{view}'
     ijk_dir = f'data/meta/3d_ijk/{view}'
     structs = utils.VIEW_STRUCTS[view]
-    # get 23 PV tip channel index
-    pv_tip_channel = structs.index(PV_TIP)
-    save_dir = f'results/{view}'
+    save_dir = f'results/{view}/new'
 
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, f'fit.csv')
@@ -68,14 +63,11 @@ if __name__ == '__main__':
     size = len(loader)
     with torch.no_grad():
         for batch, (echo, truth, struct, filename) in enumerate(loader):
-            echo = echo.to(device)
+            echo, truth = echo.to(device), truth.to(device)
             pred = model(echo)[0][0]
 
             pred_xyz = []
             for i, channel in enumerate(pred):
-                # skip PV tip
-                if i == pv_tip_channel:
-                    continue
                 a, b, c = channel.shape
                 index = torch.argmax(channel).item()
                 x, y, z = index//(b*c), (index % (b*c))//c, (index % (b*c)) % c
@@ -109,9 +101,7 @@ if __name__ == '__main__':
 
             error_distances = utils.distance_to_plane(
                 pred_xyz, pred_centroid, pred_normal)**2
-            structs_wo_pv_tip = [
-                struct for struct in structs if struct != PV_TIP]
-            for i, struct in enumerate(structs_wo_pv_tip):
+            for i, struct in enumerate(structs):
                 with open(error_path, 'a+') as file:
                     error_writer = csv.writer(file)
                     data_row = [filename[0], struct, error_distances[i]]

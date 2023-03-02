@@ -17,10 +17,12 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, help='test')
     parser.add_argument('--pth_path', type=str,
                         help='pths/A2C/2023-01-01-00-00-00/100.pth')
+    parser.add_argument('model_key', type=str, default=None, help='model key')
     args = parser.parse_args()
     view = args.view
     dataset = args.dataset
     pth_path = args.pth_path
+    model_key = args.model_key
     meta_dir = f'data/meta/{dataset}/{view}'
     ijk_dir = f'data/meta/3d_ijk/{view}'
     structs = utils.VIEW_STRUCTS[view]
@@ -48,8 +50,12 @@ if __name__ == '__main__':
                         drop_last=False, num_workers=4)
 
     model = SCN(1, len(structs), filters=128, factor=4, dropout=0.5).to(device)
-    model.load_state_dict(torch.load(
-        pth_path, map_location=torch.device(device)))
+    if model_key is None or model_key == '':
+        model.load_state_dict(torch.load(
+            pth_path, map_location=torch.device(device)))
+    else:
+        checkpoint = torch.load(pth_path, map_location=torch.device(device))
+        model.load_state_dict(checkpoint[model_key])
     model.eval()
 
     centroid_error, normal_error = [], []
