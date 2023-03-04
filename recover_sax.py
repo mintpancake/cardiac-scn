@@ -28,6 +28,7 @@ if __name__ == '__main__':
                         help='pths/SAXMV/2023-01-01-00-00-00/100.pth')
     parser.add_argument('--saxmv_model_key', type=str,
                         default=None, help='saxmv model key')
+    parser.add_argument('--subdir', type=str, default='new')
     parser.add_argument('--adjust_truth', default=False, action='store_true')
     args = parser.parse_args()
     view = args.view
@@ -49,7 +50,7 @@ if __name__ == '__main__':
     structs = utils.VIEW_STRUCTS[view]
     saxm_structs = utils.VIEW_STRUCTS['SAXM']
     saxmv_structs = utils.VIEW_STRUCTS['SAXMV']
-    save_dir = f'results/{view}/new'
+    save_dir = f'results/{view}/{args.subdir}'
     adjust_truth = args.adjust_truth
 
     os.makedirs(save_dir, exist_ok=True)
@@ -156,33 +157,52 @@ if __name__ == '__main__':
             truth_xyz = np.array(truth_xyz)
             # SAXA needs to be handled differently due to colinearity
             if adjust_truth and view == 'SAXA':
+                saxm_not_found = False
+                saxmv_not_found = False
                 saxm_truth_xyz = []
                 saxmv_truth_xyz = []
                 saxm_file_path = os.path.join(saxm_ijk_dir, filename[0]+'.csv')
-                saxmv_file_path = os.path.join(
-                    saxmv_ijk_dir, filename[0]+'.csv')
-                saxm_reader = csv.reader(open(saxm_file_path, 'r'))
-                saxmv_reader = csv.reader(open(saxmv_file_path, 'r'))
-                for row in saxm_reader:
-                    if saxm_reader.line_num == 1:
-                        continue
-                    saxm_truth_xyz.append(
-                        [float(row[2]), float(row[3]), float(row[4])])
-                for row in saxmv_reader:
-                    if saxmv_reader.line_num == 1:
-                        continue
-                    saxmv_truth_xyz.append(
-                        [float(row[2]), float(row[3]), float(row[4])])
-                saxm_truth_xyz = np.array(saxm_truth_xyz)
-                saxmv_truth_xyz = np.array(saxmv_truth_xyz)
-                truth_centroid = truth_xyz.mean(axis=0)
-                shifted_saxm_truth_xyz = saxm_truth_xyz - \
-                    saxm_truth_xyz.mean(axis=0)
-                shifted_saxmv_truth_xyz = saxmv_truth_xyz - \
-                    saxmv_truth_xyz.mean(axis=0)
-                coplanar_truth_xyz = np.concatenate(
-                    (shifted_saxm_truth_xyz, shifted_saxmv_truth_xyz), axis=0)
-                _, truth_normal = utils.fit_plane(coplanar_truth_xyz)
+                saxmv_file_path = os.path.join(saxmv_ijk_dir, filename[0]+'.csv')
+                try:
+                    saxm_reader = csv.reader(open(saxm_file_path, 'r'))
+                    for row in saxm_reader:
+                        if saxm_reader.line_num == 1:
+                            continue
+                        saxm_truth_xyz.append(
+                            [float(row[2]), float(row[3]), float(row[4])])
+                    saxm_truth_xyz = np.array(saxm_truth_xyz)
+                except FileNotFoundError:
+                    saxm_not_found = True
+                try:
+                    saxmv_reader = csv.reader(open(saxmv_file_path, 'r'))
+                    for row in saxmv_reader:
+                        if saxmv_reader.line_num == 1:
+                            continue
+                        saxmv_truth_xyz.append(
+                            [float(row[2]), float(row[3]), float(row[4])])
+                    saxmv_truth_xyz = np.array(saxmv_truth_xyz)
+                except FileNotFoundError:
+                    saxmv_not_found = True
+                if saxm_not_found and saxmv_not_found:
+                    print('SAXM and SAXMV not found, use SAXA')
+                    truth_centroid, truth_normal = utils.fit_plane(truth_xyz)
+                elif saxm_not_found:
+                    print('SAXM not found, use SAXMV')
+                    truth_centroid = truth_xyz.mean(axis=0)
+                    _, truth_normal = utils.fit_plane(saxmv_truth_xyz)
+                elif saxmv_not_found:
+                    print('SAXMV not found, use SAXM')
+                    truth_centroid = truth_xyz.mean(axis=0)
+                    _, truth_normal = utils.fit_plane(saxm_truth_xyz)
+                else:
+                    truth_centroid = truth_xyz.mean(axis=0)
+                    shifted_saxm_truth_xyz = saxm_truth_xyz - \
+                        saxm_truth_xyz.mean(axis=0)
+                    shifted_saxmv_truth_xyz = saxmv_truth_xyz - \
+                        saxmv_truth_xyz.mean(axis=0)
+                    coplanar_truth_xyz = np.concatenate(
+                        (shifted_saxm_truth_xyz, shifted_saxmv_truth_xyz), axis=0)
+                    _, truth_normal = utils.fit_plane(coplanar_truth_xyz)
             else:
                 truth_centroid, truth_normal = utils.fit_plane(truth_xyz)
 
