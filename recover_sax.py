@@ -28,7 +28,7 @@ if __name__ == '__main__':
                         help='pths/SAXMV/2023-01-01-00-00-00/100.pth')
     parser.add_argument('--saxmv_model_key', type=str,
                         default=None, help='saxmv model key')
-    parser.add_argument('--adjust_truth', type=bool, default=False)
+    parser.add_argument('--adjust_truth', default=True, action='store_false')
     args = parser.parse_args()
     view = args.view
     if view not in ['SAXA', 'SAXM', 'SAXMV']:
@@ -51,6 +51,8 @@ if __name__ == '__main__':
     saxmv_structs = utils.VIEW_STRUCTS['SAXMV']
     save_dir = f'results/{view}/new'
     adjust_truth = args.adjust_truth
+    print(f'adjust truth: {adjust_truth}')
+    exit()
 
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, f'fit.csv')

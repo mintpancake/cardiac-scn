@@ -49,6 +49,12 @@ def current_time():
     return datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
 
+def boolean_string(s):
+    if s not in {'False', 'True'}:
+        raise ValueError('Not a valid boolean string')
+    return s == 'True'
+
+
 def get_struct_name(idx):
     return STRUCTS[idx]
 
