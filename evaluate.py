@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, help='test')
     parser.add_argument('--pth_path', type=str,
                         help='pths/A2C/2023-01-01-00-00-00/100.pth')
-    parser.add_argument('model_key', type=str, default=None, help='model key')
+    parser.add_argument('--model_key', type=str, default=None, help='model key')
     args = parser.parse_args()
     view = args.view
     dataset = args.dataset
