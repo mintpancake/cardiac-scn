@@ -49,7 +49,7 @@ if __name__ == '__main__':
     structs = utils.VIEW_STRUCTS[view]
     saxm_structs = utils.VIEW_STRUCTS['SAXM']
     saxmv_structs = utils.VIEW_STRUCTS['SAXMV']
-    save_dir = f'results/new/{view}'
+    save_dir = f'results/{view}/new'
     adjust_truth = args.adjust_truth
 
     os.makedirs(save_dir, exist_ok=True)
@@ -74,16 +74,30 @@ if __name__ == '__main__':
                         drop_last=False, num_workers=4)
 
     model = SCN(1, len(structs), filters=128, factor=4, dropout=0.5).to(device)
-    model.load_state_dict(torch.load(
-        pth_path, map_location=torch.device(device)))
+    if model_key is None or model_key == '':
+        model.load_state_dict(torch.load(
+            pth_path, map_location=torch.device(device)))
+    else:
+        checkpoint = torch.load(pth_path, map_location=torch.device(device))
+        model.load_state_dict(checkpoint[model_key])
     saxm_model = SCN(1, len(saxm_structs), filters=128,
                      factor=4, dropout=0.5).to(device)
-    saxm_model.load_state_dict(torch.load(
-        saxm_pth_path, map_location=torch.device(device)))
+    if saxm_model_key is None or saxm_model_key == '':
+        saxm_model.load_state_dict(torch.load(
+            saxm_pth_path, map_location=torch.device(device)))
+    else:
+        checkpoint = torch.load(
+            saxm_pth_path, map_location=torch.device(device))
+        saxm_model.load_state_dict(checkpoint[saxm_model_key])
     saxmv_model = SCN(1, len(saxmv_structs), filters=128,
                       factor=4, dropout=0.5).to(device)
-    saxmv_model.load_state_dict(torch.load(
-        saxmv_pth_path, map_location=torch.device(device)))
+    if saxmv_model_key is None or saxmv_model_key == '':
+        saxmv_model.load_state_dict(torch.load(
+            saxmv_pth_path, map_location=torch.device(device)))
+    else:
+        checkpoint = torch.load(
+            saxmv_pth_path, map_location=torch.device(device))
+        saxmv_model.load_state_dict(checkpoint[saxmv_model_key])
     model.eval()
     saxm_model.eval()
     saxmv_model.eval()
