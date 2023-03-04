@@ -14,20 +14,43 @@ from visualize import render_cross_section
 # use SAXM SAXMV for normal vector
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--view', type=str, help='A2C')
+    parser.add_argument('--view', type=str, help='SAXA')
     parser.add_argument('--dataset', type=str, help='test')
     parser.add_argument('--pth_path', type=str,
                         help='pths/A2C/2023-01-01-00-00-00/100.pth')
-    parser.add_argument('--model_key', type=str, default=None, help='model key')
+    parser.add_argument('--model_key', type=str,
+                        default=None, help='model key')
+    parser.add_argument('--saxm_pth_path', type=str,
+                        help='pths/SAXM/2023-01-01-00-00-00/100.pth')
+    parser.add_argument('--saxm_model_key', type=str,
+                        default=None, help='saxm model key')
+    parser.add_argument('--saxmv_pth_path', type=str,
+                        help='pths/SAXMV/2023-01-01-00-00-00/100.pth')
+    parser.add_argument('--saxmv_model_key', type=str,
+                        default=None, help='saxmv model key')
+    parser.add_argument('--adjust_truth', type=bool, default=False)
     args = parser.parse_args()
     view = args.view
+    if view not in ['SAXA', 'SAXM', 'SAXMV']:
+        raise ValueError('only SAXA, SAXM, SAXMV')
     dataset = args.dataset
     pth_path = args.pth_path
+    saxm_pth_path = args.saxm_pth_path
+    saxmv_pth_path = args.saxmv_pth_path
     model_key = args.model_key
+    saxm_model_key = args.saxm_model_key
+    saxmv_model_key = args.saxmv_model_key
     meta_dir = f'data/meta/{dataset}/{view}'
+    saxm_meta_dir = f'data/meta/{dataset}/SAXM'
+    saxmv_meta_dir = f'data/meta/{dataset}/SAXMV'
     ijk_dir = f'data/meta/3d_ijk/{view}'
+    saxm_ijk_dir = f'data/meta/3d_ijk/SAXM'
+    saxmv_ijk_dir = f'data/meta/3d_ijk/SAXMV'
     structs = utils.VIEW_STRUCTS[view]
-    save_dir = f'results/{view}/new'
+    saxm_structs = utils.VIEW_STRUCTS['SAXM']
+    saxmv_structs = utils.VIEW_STRUCTS['SAXMV']
+    save_dir = f'results/new/{view}'
+    adjust_truth = args.adjust_truth
 
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, f'fit.csv')
@@ -51,30 +74,59 @@ if __name__ == '__main__':
                         drop_last=False, num_workers=4)
 
     model = SCN(1, len(structs), filters=128, factor=4, dropout=0.5).to(device)
-    if model_key is None or model_key == '':
-        model.load_state_dict(torch.load(
-            pth_path, map_location=torch.device(device)))
-    else:
-        checkpoint = torch.load(pth_path, map_location=torch.device(device))
-        model.load_state_dict(checkpoint[model_key])
+    model.load_state_dict(torch.load(
+        pth_path, map_location=torch.device(device)))
+    saxm_model = SCN(1, len(saxm_structs), filters=128,
+                     factor=4, dropout=0.5).to(device)
+    saxm_model.load_state_dict(torch.load(
+        saxm_pth_path, map_location=torch.device(device)))
+    saxmv_model = SCN(1, len(saxmv_structs), filters=128,
+                      factor=4, dropout=0.5).to(device)
+    saxmv_model.load_state_dict(torch.load(
+        saxmv_pth_path, map_location=torch.device(device)))
     model.eval()
+    saxm_model.eval()
+    saxmv_model.eval()
 
     centroid_error, normal_error = [], []
     size = len(loader)
     with torch.no_grad():
         for batch, (echo, truth, struct, filename) in enumerate(loader):
-            echo, truth = echo.to(device), truth.to(device)
+            echo = echo.to(device)
             pred = model(echo)[0][0]
+            saxm_pred = saxm_model(echo)[0][0]
+            saxmv_pred = saxmv_model(echo)[0][0]
 
-            pred_xyz = []
+            pred_xyz, saxm_pred_xyz, saxmv_pred_xyz = [], [], []
             for i, channel in enumerate(pred):
                 a, b, c = channel.shape
                 index = torch.argmax(channel).item()
                 x, y, z = index//(b*c), (index % (b*c))//c, (index % (b*c)) % c
                 x, y, z = float(x), float(y), float(z)
                 pred_xyz.append([x, y, z])
+            for i, channel in enumerate(saxm_pred):
+                a, b, c = channel.shape
+                index = torch.argmax(channel).item()
+                x, y, z = index//(b*c), (index % (b*c))//c, (index % (b*c)) % c
+                x, y, z = float(x), float(y), float(z)
+                saxm_pred_xyz.append([x, y, z])
+            for i, channel in enumerate(saxmv_pred):
+                a, b, c = channel.shape
+                index = torch.argmax(channel).item()
+                x, y, z = index//(b*c), (index % (b*c))//c, (index % (b*c)) % c
+                x, y, z = float(x), float(y), float(z)
+                saxmv_pred_xyz.append([x, y, z])
             pred_xyz = np.array(pred_xyz)
-            pred_centroid, pred_normal = utils.fit_plane(pred_xyz)
+            saxm_pred_xyz = np.array(saxm_pred_xyz)
+            saxmv_pred_xyz = np.array(saxmv_pred_xyz)
+
+            pred_centroid = pred_xyz.mean(axis=0)
+            shifted_saxm_pred_xyz = saxm_pred_xyz - saxm_pred_xyz.mean(axis=0)
+            shifted_saxmv_pred_xyz = saxmv_pred_xyz - \
+                saxmv_pred_xyz.mean(axis=0)
+            coplanar_pred_xyz = np.concatenate(
+                (shifted_saxm_pred_xyz, shifted_saxmv_pred_xyz), axis=0)
+            _, pred_normal = utils.fit_plane(coplanar_pred_xyz)
 
             truth_nrrd_path = None
             truth_xyz = []
@@ -85,9 +137,40 @@ if __name__ == '__main__':
                     continue
                 elif reader.line_num == 2:
                     truth_nrrd_path = row[0]
-                truth_xyz.append([float(row[2]), float(row[3]), float(row[4])])
+                truth_xyz.append(
+                    [float(row[2]), float(row[3]), float(row[4])])
             truth_xyz = np.array(truth_xyz)
-            truth_centroid, truth_normal = utils.fit_plane(truth_xyz)
+            # SAXA needs to be handled differently due to colinearity
+            if adjust_truth and view == 'SAXA':
+                saxm_truth_xyz = []
+                saxmv_truth_xyz = []
+                saxm_file_path = os.path.join(saxm_ijk_dir, filename[0]+'.csv')
+                saxmv_file_path = os.path.join(
+                    saxmv_ijk_dir, filename[0]+'.csv')
+                saxm_reader = csv.reader(open(saxm_file_path, 'r'))
+                saxmv_reader = csv.reader(open(saxmv_file_path, 'r'))
+                for row in saxm_reader:
+                    if saxm_reader.line_num == 1:
+                        continue
+                    saxm_truth_xyz.append(
+                        [float(row[2]), float(row[3]), float(row[4])])
+                for row in saxmv_reader:
+                    if saxmv_reader.line_num == 1:
+                        continue
+                    saxmv_truth_xyz.append(
+                        [float(row[2]), float(row[3]), float(row[4])])
+                saxm_truth_xyz = np.array(saxm_truth_xyz)
+                saxmv_truth_xyz = np.array(saxmv_truth_xyz)
+                truth_centroid = truth_xyz.mean(axis=0)
+                shifted_saxm_truth_xyz = saxm_truth_xyz - \
+                    saxm_truth_xyz.mean(axis=0)
+                shifted_saxmv_truth_xyz = saxmv_truth_xyz - \
+                    saxmv_truth_xyz.mean(axis=0)
+                coplanar_truth_xyz = np.concatenate(
+                    (shifted_saxm_truth_xyz, shifted_saxmv_truth_xyz), axis=0)
+                _, truth_normal = utils.fit_plane(coplanar_truth_xyz)
+            else:
+                truth_centroid, truth_normal = utils.fit_plane(truth_xyz)
 
             centroid_distance = np.sqrt(
                 np.sum((pred_centroid-truth_centroid)**2))
