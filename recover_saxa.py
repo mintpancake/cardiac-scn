@@ -28,7 +28,6 @@ if __name__ == '__main__':
                         help='pths/SAXMV/2023-01-01-00-00-00/100.pth')
     parser.add_argument('--saxmv_model_key', type=str,
                         default=None, help='saxmv model key')
-    parser.add_argument('--subdir', type=str, default='new')
     parser.add_argument('--adjust_truth', default=False, action='store_true')
     args = parser.parse_args()
     view = args.view
@@ -50,7 +49,7 @@ if __name__ == '__main__':
     structs = utils.VIEW_STRUCTS[view]
     saxm_structs = utils.VIEW_STRUCTS['SAXM']
     saxmv_structs = utils.VIEW_STRUCTS['SAXMV']
-    save_dir = f'results/{view}/{args.subdir}'
+    save_dir = f'results/{view}'
     adjust_truth = args.adjust_truth
 
     os.makedirs(save_dir, exist_ok=True)
