@@ -28,7 +28,6 @@ if __name__ == '__main__':
                         help='pths/SAXMV/2023-01-01-00-00-00/100.pth')
     parser.add_argument('--saxmv_model_key', type=str,
                         default=None, help='saxmv model key')
-    parser.add_argument('--adjust_truth', default=False, action='store_true')
     args = parser.parse_args()
     view = args.view
     if view not in ['SAXA', 'SAXM', 'SAXMV']:
@@ -50,7 +49,6 @@ if __name__ == '__main__':
     saxm_structs = utils.VIEW_STRUCTS['SAXM']
     saxmv_structs = utils.VIEW_STRUCTS['SAXMV']
     save_dir = f'results/{view}'
-    adjust_truth = args.adjust_truth
 
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, f'fit.csv')
@@ -155,7 +153,7 @@ if __name__ == '__main__':
                     [float(row[2]), float(row[3]), float(row[4])])
             truth_xyz = np.array(truth_xyz)
             # SAXA needs to be handled differently due to colinearity
-            if adjust_truth and view == 'SAXA':
+            if view == 'SAXA':
                 saxm_not_found = False
                 saxmv_not_found = False
                 saxm_truth_xyz = []
