@@ -35,7 +35,7 @@ def pad(data: np.ndarray):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--views', type=str,
+    parser.add_argument('--views', type=str, required=True,
                         help='A2C,A4C,SAXA,SAXB,ALAX,SAXMV,SAXM')
     args = parser.parse_args()
     csv_dirs = [f'data/meta/4d_ijk/{v.strip()}' for v in args.views.split(',')]

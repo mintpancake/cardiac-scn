@@ -68,7 +68,7 @@ def gaussian_excitation(mean: list,
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--views', type=str,
+    parser.add_argument('--views', type=str, required=True,
                         help='A2C,A4C,SAXA,SAXB,ALAX,SAXMV,SAXM')
     args = parser.parse_args()
     csv_dirs = [f'data/meta/3d_ijk/{v.strip()}' for v in args.views.split(',')]
@@ -125,12 +125,15 @@ if __name__ == '__main__':
                 if idx == 0:
                     with open(meta_save_path, 'w') as meta_file:
                         csv_writer = csv.writer(meta_file)
-                        csv_head = ['index', 'struct', 'echo', 'truth', 'exist']
+                        csv_head = ['index', 'struct',
+                                    'echo', 'truth', 'exist']
                         csv_writer.writerow(csv_head)
-                        data_row = [idx, struct_idx, nrrd_path, truth_path, exist]
+                        data_row = [idx, struct_idx,
+                                    nrrd_path, truth_path, exist]
                         csv_writer.writerow(data_row)
                 else:
                     with open(meta_save_path, 'a+') as meta_file:
                         csv_writer = csv.writer(meta_file)
-                        data_row = [idx, struct_idx, nrrd_path, truth_path, exist]
+                        data_row = [idx, struct_idx,
+                                    nrrd_path, truth_path, exist]
                         csv_writer.writerow(data_row)

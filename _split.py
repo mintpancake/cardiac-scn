@@ -5,7 +5,6 @@ import numpy as np
 CLEANUP_EXIST = True
 
 all_dir = 'data/meta/3d_truth'
-test_meta_path = 'data/meta/test/_TEST.txt'
 train_val_dir = 'data/meta/train_val'
 train_dir = 'data/meta/train'
 val_dir = 'data/meta/val'
@@ -13,10 +12,13 @@ test_dir = 'data/meta/test'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--views', type=str,
+    parser.add_argument('--views', type=str, required=True,
                         help='A2C,A4C,SAXA,SAXB,ALAX,SAXMV,SAXM')
+    parser.add_argument('--test', type=str, default='TEST.txt',
+                        help='path of the list of test set')
     args = parser.parse_args()
     views = [v.strip() for v in args.views.split(',')]
+    test_meta_path = args.test
 
     # Read predetermined test data
     test_filenames = set()
