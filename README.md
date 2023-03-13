@@ -92,7 +92,7 @@ python evaluate.py --view $VIEW --pth_path $CKPT
     ```
     python recover.py --view $VIEW --pth_path $CKPT
     ```
-- For SAXA, use SAXM's and SAXMV's landmarks to predict the normal. 
+- For SAXA, jointly use SAXA's, SAXM's and SAXMV's landmarks to predict the normal. 
     ```
     python recover_saxa.py --view "SAXA" --pth_path $SAXA_CKPT --saxm_pth_path $SAXM_CKPT --saxmv_pth_path $SAXMV_CKPT
     ```
@@ -104,7 +104,7 @@ python evaluate.py --view $VIEW --pth_path $CKPT
     ```
     python recover.py --view $VIEW --pth_path $CKPT
     ```
-    or jointly use the each other's landmarks to predict the normal. 
+    or jointly use each other's landmarks to predict the normal. 
     ```
     python recover_saxa.py --view $VIEW --pth_path $CKPT --saxm_pth_path $SAXM_CKPT --saxmv_pth_path $SAXMV_CKPT
     ```

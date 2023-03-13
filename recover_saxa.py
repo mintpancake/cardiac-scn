@@ -138,6 +138,11 @@ if __name__ == '__main__':
                 saxmv_pred_xyz.mean(axis=0)
             coplanar_pred_xyz = np.concatenate(
                 (shifted_saxm_pred_xyz, shifted_saxmv_pred_xyz), axis=0)
+            # add SAXA for more robustness
+            if view == 'SAXA':
+                shifted_pred_xyz = pred_xyz - pred_xyz.mean(axis=0)
+                coplanar_pred_xyz = np.concatenate(
+                    (shifted_pred_xyz, coplanar_pred_xyz), axis=0)
             _, pred_normal = utils.fit_plane(coplanar_pred_xyz)
 
             truth_nrrd_path = None
@@ -187,19 +192,33 @@ if __name__ == '__main__':
                 elif saxm_not_found:
                     print('SAXM not found, use SAXMV')
                     truth_centroid = truth_xyz.mean(axis=0)
-                    _, truth_normal = utils.fit_plane(saxmv_truth_xyz)
+                    shifted_truth_xyz = truth_xyz - \
+                        truth_xyz.mean(axis=0)
+                    shifted_saxmv_truth_xyz = saxmv_truth_xyz - \
+                        saxmv_truth_xyz.mean(axis=0)
+                    coplanar_truth_xyz = np.concatenate(
+                        (shifted_truth_xyz, shifted_saxmv_truth_xyz), axis=0)
+                    _, truth_normal = utils.fit_plane(coplanar_truth_xyz)
                 elif saxmv_not_found:
                     print('SAXMV not found, use SAXM')
                     truth_centroid = truth_xyz.mean(axis=0)
-                    _, truth_normal = utils.fit_plane(saxm_truth_xyz)
+                    shifted_truth_xyz = truth_xyz - \
+                        truth_xyz.mean(axis=0)
+                    shifted_saxm_truth_xyz = saxm_truth_xyz - \
+                        saxm_truth_xyz.mean(axis=0)
+                    coplanar_truth_xyz = np.concatenate(
+                        (shifted_truth_xyz, shifted_saxm_truth_xyz), axis=0)
+                    _, truth_normal = utils.fit_plane(coplanar_truth_xyz)
                 else:
                     truth_centroid = truth_xyz.mean(axis=0)
+                    shifted_truth_xyz = truth_xyz - \
+                        truth_xyz.mean(axis=0)
                     shifted_saxm_truth_xyz = saxm_truth_xyz - \
                         saxm_truth_xyz.mean(axis=0)
                     shifted_saxmv_truth_xyz = saxmv_truth_xyz - \
                         saxmv_truth_xyz.mean(axis=0)
                     coplanar_truth_xyz = np.concatenate(
-                        (shifted_saxm_truth_xyz, shifted_saxmv_truth_xyz), axis=0)
+                        (shifted_truth_xyz, shifted_saxm_truth_xyz, shifted_saxmv_truth_xyz), axis=0)
                     _, truth_normal = utils.fit_plane(coplanar_truth_xyz)
             else:
                 truth_centroid, truth_normal = utils.fit_plane(truth_xyz)
