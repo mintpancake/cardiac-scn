@@ -14,20 +14,20 @@ from visualize import render_cross_section
 # use SAXM SAXMV for normal vector
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--view', type=str, help='SAXA')
-    parser.add_argument('--dataset', type=str, help='test')
-    parser.add_argument('--pth_path', type=str,
+    parser.add_argument('--view', type=str, required=True, help='SAXA')
+    parser.add_argument('--dataset', type=str, default="test", help='test')
+    parser.add_argument('--pth_path', type=str, required=True,
                         help='pths/A2C/2023-01-01-00-00-00/100.pth')
     parser.add_argument('--model_key', type=str,
-                        default=None, help='model key')
-    parser.add_argument('--saxm_pth_path', type=str,
+                        default='model_state_dict', help='model key')
+    parser.add_argument('--saxm_pth_path', type=str, required=True,
                         help='pths/SAXM/2023-01-01-00-00-00/100.pth')
     parser.add_argument('--saxm_model_key', type=str,
-                        default=None, help='saxm model key')
-    parser.add_argument('--saxmv_pth_path', type=str,
+                        default='model_state_dict', help='saxm model key')
+    parser.add_argument('--saxmv_pth_path', type=str, required=True,
                         help='pths/SAXMV/2023-01-01-00-00-00/100.pth')
     parser.add_argument('--saxmv_model_key', type=str,
-                        default=None, help='saxmv model key')
+                        default='model_state_dict', help='saxmv model key')
     args = parser.parse_args()
     view = args.view
     if view not in ['SAXA', 'SAXM', 'SAXMV']:
@@ -159,7 +159,8 @@ if __name__ == '__main__':
                 saxm_truth_xyz = []
                 saxmv_truth_xyz = []
                 saxm_file_path = os.path.join(saxm_ijk_dir, filename[0]+'.csv')
-                saxmv_file_path = os.path.join(saxmv_ijk_dir, filename[0]+'.csv')
+                saxmv_file_path = os.path.join(
+                    saxmv_ijk_dir, filename[0]+'.csv')
                 try:
                     saxm_reader = csv.reader(open(saxm_file_path, 'r'))
                     for row in saxm_reader:

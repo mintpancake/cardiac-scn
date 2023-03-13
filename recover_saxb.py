@@ -15,11 +15,12 @@ PV_TIP = 23
 # ignore 23 PV tip
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--view', type=str, help='SAXB')
-    parser.add_argument('--dataset', type=str, help='test')
-    parser.add_argument('--pth_path', type=str,
+    parser.add_argument('--view', type=str, default='SAXB', help='SAXB')
+    parser.add_argument('--dataset', type=str, default='test', help='test')
+    parser.add_argument('--pth_path', type=str, required=True,
                         help='pths/SAXB/2023-01-01-00-00-00/100.pth')
-    parser.add_argument('--model_key', type=str, default=None, help='model key')
+    parser.add_argument('--model_key', type=str,
+                        default='model_state_dict', help='model key')
     args = parser.parse_args()
     view = args.view
     if view != 'SAXB':
