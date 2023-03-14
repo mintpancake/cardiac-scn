@@ -189,18 +189,7 @@ class Trainer(object):
 
             if (t+1) % self.save_interval == 0:
                 pth_file_path = os.path.join(self.pth_path, f'{str(t+1)}.pth')
-                ckpt_dict = {
-                    'epoch': t,
-                    'model_state_dict': self.model.state_dict(),
-                    'optimizer_state_dict': self.optimizer.state_dict(),
-                    'lr_scheduler_state_dict': self.lr_scheduler.state_dict(),
-                    'total_train_step': self.total_train_step,
-                    'total_val_step': self.total_val_step,
-                    'last_val_loss': self.last_val_loss,
-                    'best_epoch': self.best_epoch,
-                    'init_time': self.init_time,
-                }
-                torch.save(ckpt_dict, pth_file_path)
+                self.save_state(pth_file_path, t)
                 self.print(f'Checkpoint saved to {pth_file_path}...')
 
             if val_loss <= self.last_val_loss:
@@ -211,36 +200,13 @@ class Trainer(object):
                 self.best_epoch = t+1
                 pth_file_path = os.path.join(
                     self.pth_path, f'{self.best_epoch}-best.pth')
-                ckpt_dict = {
-                    'epoch': t,
-                    'model_state_dict': self.model.state_dict(),
-                    'optimizer_state_dict': self.optimizer.state_dict(),
-                    'lr_scheduler_state_dict': self.lr_scheduler.state_dict(),
-                    'total_train_step': self.total_train_step,
-                    'total_val_step': self.total_val_step,
-                    'last_val_loss': self.last_val_loss,
-                    'best_epoch': self.best_epoch,
-                    'init_time': self.init_time,
-                }
-                torch.save(ckpt_dict, pth_file_path)
+                self.save_state(pth_file_path, t)
                 self.print(f'Best checkpoint saved to {pth_file_path}...')
                 self.last_val_loss = val_loss
 
         pth_file_path = os.path.join(
             self.pth_path, f'{self.epochs}-latest.pth')
-        ckpt_dict = {
-            'epoch': t,
-            'model_state_dict': self.model.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'lr_scheduler_state_dict': self.lr_scheduler.state_dict(),
-            'total_train_step': self.total_train_step,
-            'total_val_step': self.total_val_step,
-            'last_val_loss': self.last_val_loss,
-            'best_epoch': self.best_epoch,
-            'init_time': self.init_time,
-        }
-        torch.save(ckpt_dict, pth_file_path)
-
+        self.save_state(pth_file_path, t)
         self.print(
             f'Completed {self.epochs} epochs\nLatest checkpoint saved to {pth_file_path}')
         self.logger.close()
@@ -250,6 +216,20 @@ class Trainer(object):
         console_file = open(self.console_path, 'a+')
         console_file.write(text+'\n')
         console_file.close()
+
+    def save_state(self, path, epoch):
+        ckpt_dict = {
+            'epoch': epoch,
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'lr_scheduler_state_dict': self.lr_scheduler.state_dict(),
+            'total_train_step': self.total_train_step,
+            'total_val_step': self.total_val_step,
+            'last_val_loss': self.last_val_loss,
+            'best_epoch': self.best_epoch,
+            'init_time': self.init_time,
+        }
+        torch.save(ckpt_dict, path)
 
 
 if __name__ == '__main__':
