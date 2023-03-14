@@ -57,7 +57,7 @@ cardiac-scn
     python _generate_truth.py --views $VIEW
     python _split.py --views $VIEW --test "TEST.txt"
     ```
-    where `$VIEW` is one of is a list of cross-section view abbreviations separated by `,`, *e.g.*, `VIEW="A2C,A4C,SAXA,SAXB,ALAX,SAXMV,SAXM"`.
+    where `$VIEW` is a list of cross-section view abbreviations separated by `,`, *e.g.*, `VIEW="A2C,A4C,SAXA,SAXB,ALAX,SAXMV,SAXM"`.
 
     - `TEST.txt` is a list of fixed test filenames. 
     - This process may take a while. Recommended to process one view at a time.   
