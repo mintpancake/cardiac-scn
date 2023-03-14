@@ -16,16 +16,18 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--view', type=str, required=True, help='SAXA')
     parser.add_argument('--dataset', type=str, default="test", help='test')
-    parser.add_argument('--pth_path', type=str, required=True,
-                        help='pths/A2C/2023-01-01-00-00-00/100.pth')
-    parser.add_argument('--model_key', type=str,
-                        default='model_state_dict', help='model key')
+
+    parser.add_argument('--saxa_pth_path', type=str, required=True,
+                        help='pths/SAXA/2023-01-01-00-00-00/100.pth')
     parser.add_argument('--saxm_pth_path', type=str, required=True,
                         help='pths/SAXM/2023-01-01-00-00-00/100.pth')
-    parser.add_argument('--saxm_model_key', type=str,
-                        default='model_state_dict', help='saxm model key')
     parser.add_argument('--saxmv_pth_path', type=str, required=True,
                         help='pths/SAXMV/2023-01-01-00-00-00/100.pth')
+
+    parser.add_argument('--saxa_model_key', type=str,
+                        default='model_state_dict', help='saxa model key')
+    parser.add_argument('--saxm_model_key', type=str,
+                        default='model_state_dict', help='saxm model key')
     parser.add_argument('--saxmv_model_key', type=str,
                         default='model_state_dict', help='saxmv model key')
     args = parser.parse_args()
@@ -33,22 +35,25 @@ if __name__ == '__main__':
     if view not in ['SAXA', 'SAXM', 'SAXMV']:
         raise ValueError('only SAXA, SAXM, SAXMV')
     dataset = args.dataset
-    pth_path = args.pth_path
+    saxa_pth_path = args.saxa_pth_path
     saxm_pth_path = args.saxm_pth_path
     saxmv_pth_path = args.saxmv_pth_path
-    model_key = args.model_key
+    saxa_model_key = args.saxa_model_key
     saxm_model_key = args.saxm_model_key
     saxmv_model_key = args.saxmv_model_key
     meta_dir = f'data/meta/{dataset}/{view}'
+    saxa_meta_dir = f'data/meta/{dataset}/SAXA'
     saxm_meta_dir = f'data/meta/{dataset}/SAXM'
     saxmv_meta_dir = f'data/meta/{dataset}/SAXMV'
     ijk_dir = f'data/meta/3d_ijk/{view}'
+    saxa_ijk_dir = f'data/meta/3d_ijk/SAXA'
     saxm_ijk_dir = f'data/meta/3d_ijk/SAXM'
     saxmv_ijk_dir = f'data/meta/3d_ijk/SAXMV'
     structs = utils.VIEW_STRUCTS[view]
+    saxa_structs = utils.VIEW_STRUCTS['SAXA']
     saxm_structs = utils.VIEW_STRUCTS['SAXM']
     saxmv_structs = utils.VIEW_STRUCTS['SAXMV']
-    save_dir = f'results/{view}'
+    save_dir = f'dev_results/{view}'
 
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, f'fit.csv')
@@ -71,15 +76,20 @@ if __name__ == '__main__':
     loader = DataLoader(dataset, batch_size=1, shuffle=False,
                         drop_last=False, num_workers=4)
 
-    model = SCN(1, len(structs), filters=128, factor=4, dropout=0.5).to(device)
-    if model_key is None or model_key == '':
-        model.load_state_dict(torch.load(
-            pth_path, map_location=torch.device(device)))
-    else:
-        checkpoint = torch.load(pth_path, map_location=torch.device(device))
-        model.load_state_dict(checkpoint[model_key])
+    saxa_model = SCN(1, len(saxa_structs), filters=128,
+                     factor=4, dropout=0.5).to(device)
     saxm_model = SCN(1, len(saxm_structs), filters=128,
                      factor=4, dropout=0.5).to(device)
+    saxmv_model = SCN(1, len(saxmv_structs), filters=128,
+                      factor=4, dropout=0.5).to(device)
+
+    if saxa_model_key is None or saxa_model_key == '':
+        saxa_model.load_state_dict(torch.load(
+            saxa_pth_path, map_location=torch.device(device)))
+    else:
+        checkpoint = torch.load(
+            saxa_pth_path, map_location=torch.device(device))
+        saxa_model.load_state_dict(checkpoint[saxa_model_key])
     if saxm_model_key is None or saxm_model_key == '':
         saxm_model.load_state_dict(torch.load(
             saxm_pth_path, map_location=torch.device(device)))
@@ -87,8 +97,6 @@ if __name__ == '__main__':
         checkpoint = torch.load(
             saxm_pth_path, map_location=torch.device(device))
         saxm_model.load_state_dict(checkpoint[saxm_model_key])
-    saxmv_model = SCN(1, len(saxmv_structs), filters=128,
-                      factor=4, dropout=0.5).to(device)
     if saxmv_model_key is None or saxmv_model_key == '':
         saxmv_model.load_state_dict(torch.load(
             saxmv_pth_path, map_location=torch.device(device)))
@@ -96,7 +104,7 @@ if __name__ == '__main__':
         checkpoint = torch.load(
             saxmv_pth_path, map_location=torch.device(device))
         saxmv_model.load_state_dict(checkpoint[saxmv_model_key])
-    model.eval()
+    saxa_model.eval()
     saxm_model.eval()
     saxmv_model.eval()
 
@@ -105,17 +113,17 @@ if __name__ == '__main__':
     with torch.no_grad():
         for batch, (echo, truth, struct, filename) in enumerate(loader):
             echo = echo.to(device)
-            pred = model(echo)[0][0]
+            saxa_pred = saxa_model(echo)[0][0]
             saxm_pred = saxm_model(echo)[0][0]
             saxmv_pred = saxmv_model(echo)[0][0]
 
-            pred_xyz, saxm_pred_xyz, saxmv_pred_xyz = [], [], []
-            for i, channel in enumerate(pred):
+            saxa_pred_xyz, saxm_pred_xyz, saxmv_pred_xyz = [], [], []
+            for i, channel in enumerate(saxa_pred):
                 a, b, c = channel.shape
                 index = torch.argmax(channel).item()
                 x, y, z = index//(b*c), (index % (b*c))//c, (index % (b*c)) % c
                 x, y, z = float(x), float(y), float(z)
-                pred_xyz.append([x, y, z])
+                saxa_pred_xyz.append([x, y, z])
             for i, channel in enumerate(saxm_pred):
                 a, b, c = channel.shape
                 index = torch.argmax(channel).item()
@@ -128,21 +136,30 @@ if __name__ == '__main__':
                 x, y, z = index//(b*c), (index % (b*c))//c, (index % (b*c)) % c
                 x, y, z = float(x), float(y), float(z)
                 saxmv_pred_xyz.append([x, y, z])
-            pred_xyz = np.array(pred_xyz)
+            saxa_pred_xyz = np.array(saxa_pred_xyz)
             saxm_pred_xyz = np.array(saxm_pred_xyz)
             saxmv_pred_xyz = np.array(saxmv_pred_xyz)
 
-            pred_centroid = pred_xyz.mean(axis=0)
+            pred_xyz = None
+            pred_centroid = None
+            if view == 'SAXA':
+                pred_xyz = saxa_pred_xyz
+                pred_centroid = saxa_pred_xyz.mean(axis=0)
+            elif view == 'SAXM':
+                pred_xyz = saxm_pred_xyz
+                pred_centroid = saxm_pred_xyz.mean(axis=0)
+            elif view == 'SAXMV':
+                pred_xyz = saxmv_pred_xyz
+                pred_centroid = saxmv_pred_xyz.mean(axis=0)
+            else:
+                raise ValueError('Invalid view')
+
+            shifted_saxa_pred_xyz = saxa_pred_xyz - saxa_pred_xyz.mean(axis=0)
             shifted_saxm_pred_xyz = saxm_pred_xyz - saxm_pred_xyz.mean(axis=0)
             shifted_saxmv_pred_xyz = saxmv_pred_xyz - \
                 saxmv_pred_xyz.mean(axis=0)
             coplanar_pred_xyz = np.concatenate(
-                (shifted_saxm_pred_xyz, shifted_saxmv_pred_xyz), axis=0)
-            # add SAXA for more robustness
-            if view == 'SAXA':
-                shifted_pred_xyz = pred_xyz - pred_xyz.mean(axis=0)
-                coplanar_pred_xyz = np.concatenate(
-                    (shifted_pred_xyz, coplanar_pred_xyz), axis=0)
+                (shifted_saxa_pred_xyz, shifted_saxm_pred_xyz, shifted_saxmv_pred_xyz), axis=0)
             _, pred_normal = utils.fit_plane(coplanar_pred_xyz)
 
             truth_nrrd_path = None
@@ -157,7 +174,7 @@ if __name__ == '__main__':
                 truth_xyz.append(
                     [float(row[2]), float(row[3]), float(row[4])])
             truth_xyz = np.array(truth_xyz)
-            # SAXA needs to be handled differently due to colinearity
+            # groundtruth SAXA needs to be handled differently due to colinearity
             if view == 'SAXA':
                 saxm_not_found = False
                 saxmv_not_found = False

@@ -94,19 +94,19 @@ python evaluate.py --view $VIEW --pth_path $CKPT
     ```
 - For SAXA, jointly use SAXA's, SAXM's and SAXMV's landmarks to predict the normal. 
     ```
-    python recover_saxa.py --view "SAXA" --pth_path $SAXA_CKPT --saxm_pth_path $SAXM_CKPT --saxmv_pth_path $SAXMV_CKPT
+    python recover_saxa.py --view "SAXA" --saxa_pth_path $SAXA_CKPT --saxm_pth_path $SAXM_CKPT --saxmv_pth_path $SAXMV_CKPT
     ```
 - For SAXB, ignore PV-tip when fitting the plane.
     ```
     python recover_saxb.py --view "SAXB" --pth_path $SAXB_CKPT
     ```
-- For SAXM, SAXMV, either use the general SVD method.
+- For SAXM, SAXMV, either use the general SVD method,
     ```
     python recover.py --view $VIEW --pth_path $CKPT
     ```
-    or jointly use each other's landmarks to predict the normal. 
+    or jointly use SAXA's, SAXM's and SAXMV's landmarks to predict the normal. 
     ```
-    python recover_saxa.py --view $VIEW --pth_path $CKPT --saxm_pth_path $SAXM_CKPT --saxmv_pth_path $SAXMV_CKPT
+    python recover_saxa.py --view $VIEW --saxa_pth_path $SAXA_CKPT --saxm_pth_path $SAXM_CKPT --saxmv_pth_path $SAXMV_CKPT
     ```
     - The results will be saved in `results/$VIEW/`.
     - `fit.csv` records the predicted centroid and normal vector of the cross-section plane.
