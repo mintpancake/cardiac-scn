@@ -26,6 +26,7 @@ if __name__ == '__main__':
     ijk_dir = f'data/meta/3d_ijk/{view}'
     structs = utils.VIEW_STRUCTS[view]
     save_dir = f'evaluation/{view}'
+    ratios = utils.read_ratio(f'data/meta/size/{view}.csv')
 
     time = utils.current_time()
     os.makedirs(save_dir, exist_ok=True)
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     with open(save_path, 'w') as file:
         writer = csv.writer(file)
         header = ['name (landmark)', 'truth_x', 'truth_y', 'truth_z',
-                  'pred_x', 'pred_y', 'pred_z', 'euclidean_distance']
+                  'pred_x', 'pred_y', 'pred_z', 'euclidean_distance', 'real_distance', 'ratio']
         writer.writerow(header)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -53,6 +54,7 @@ if __name__ == '__main__':
     model.eval()
 
     dists = []
+    real_dists = []
     size = len(loader)
     with torch.no_grad():
         for batch, (echo, truth, struct, filename) in enumerate(loader):
@@ -78,6 +80,7 @@ if __name__ == '__main__':
             with open(save_path, 'a+') as file:
                 writer = csv.writer(file)
                 print(f'[{batch:>3d}/{size:>3d}]', end=' ')
+                ratio = ratios.get(filename[0])
                 for st in structs:
                     t_xyz = truth_xyz.get(st)
                     p_xyz = pred_xyz[st]
@@ -88,22 +91,29 @@ if __name__ == '__main__':
                         p_xyz_ndarray = np.array(p_xyz)
                         dist = np.sqrt(
                             np.sum((t_xyz_ndarray-p_xyz_ndarray)**2)).item()
+                        real_dist = dist/ratio
                         dists.append(dist)
+                        real_dists.append(real_dist)
                     else:
                         row.extend(['', '', ''])
                         dist = ''
+                        real_dist = ''
                     row.extend(p_xyz)
-                    row.append(dist)
+                    row.extend([dist, real_dist, ratio])
                     writer.writerow(row)
                     print(dist, end=' ')
                 print()
 
     dists = np.array(dists)
+    real_dists = np.array(real_dists)
     with open(save_path, 'a+') as file:
         writer = csv.writer(file)
-        writer.writerow(['[median]', '', '', '', '', '', '', np.median(dists)])
-        writer.writerow(['[mean]', '', '', '', '', '', '', dists.mean()])
-        writer.writerow(['[std]', '', '', '', '', '', '', dists.std()])
-    print(f'[median] {np.median(dists)}')
-    print(f'[mean] {dists.mean()}')
-    print(f'[std] {dists.std()}')
+        writer.writerow(['[median]', '', '', '', '', '', '',
+                        np.median(dists), np.median(real_dists), ''])
+        writer.writerow(['[mean]', '', '', '', '', '', '',
+                        dists.mean(), real_dists.mean(), ''])
+        writer.writerow(['[std]', '', '', '', '', '', '',
+                        dists.std(), real_dists.std(), ''])
+    print(f'[median] {np.median(dists)} {np.median(real_dists)}')
+    print(f'[mean] {dists.mean()} {real_dists.mean()}')
+    print(f'[std] {dists.std()} {real_dists.std()}')

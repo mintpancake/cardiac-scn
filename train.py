@@ -200,9 +200,9 @@ class Trainer(object):
                 self.best_epoch = t+1
                 pth_file_path = os.path.join(
                     self.pth_path, f'{self.best_epoch}-best.pth')
+                self.last_val_loss = val_loss
                 self.save_state(pth_file_path, t)
                 self.print(f'Best checkpoint saved to {pth_file_path}...')
-                self.last_val_loss = val_loss
 
         pth_file_path = os.path.join(
             self.pth_path, f'{self.epochs}-latest.pth')

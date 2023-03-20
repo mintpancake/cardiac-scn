@@ -28,6 +28,7 @@ if __name__ == '__main__':
     ijk_dir = f'data/meta/3d_ijk/{view}'
     structs = utils.VIEW_STRUCTS[view]
     save_dir = f'results/{view}'
+    ratios = utils.read_ratio(f'data/meta/size/{view}.csv')
 
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, f'fit.csv')
@@ -35,8 +36,9 @@ if __name__ == '__main__':
     image_path = os.path.join(save_dir, 'images')
     with open(save_path, 'w') as file:
         writer = csv.writer(file)
-        header = ['name', 'p_centroid', 't_centroid', 'centroid_dist',
-                  'p_normal', 't_normal', 'normal_angle']
+        header = ['name', 'p_centroid', 't_centroid', 'p_normal', 't_normal',
+                  'normal_angle', 'centroid_dist', 'dist_along_t_normal',
+                  'real_centroid_dist', 'real_dist_along_t_normal', 'ratio']
         writer.writerow(header)
     with open(error_path, 'w') as file:
         error_writer = csv.writer(file)
@@ -59,7 +61,7 @@ if __name__ == '__main__':
         model.load_state_dict(checkpoint[model_key])
     model.eval()
 
-    centroid_error, normal_error = [], []
+    normal_error, centroid_error, normal_centroid_error, real_centroid_error, real_normal_centroid_error = [], [], [], [], []
     size = len(loader)
     with torch.no_grad():
         for batch, (echo, truth, struct, filename) in enumerate(loader):
@@ -92,11 +94,18 @@ if __name__ == '__main__':
             centroid_distance = np.sqrt(
                 np.sum((pred_centroid-truth_centroid)**2))
             normal_angle = utils.angle_between(pred_normal, truth_normal)
+            ratio = ratios[filename[0]]
+            normal_centroid_distance = utils.distance_along_direction(
+                truth_centroid, pred_centroid, truth_normal)
+            real_centroid_distance = centroid_distance/ratio
+            real_normal_centroid_distance = normal_centroid_distance/ratio
 
             with open(save_path, 'a+') as file:
                 writer = csv.writer(file)
                 data_row = [filename[0], pred_centroid, truth_centroid,
-                            centroid_distance, pred_normal, truth_normal, normal_angle]
+                            pred_normal, truth_normal, normal_angle,
+                            centroid_distance, normal_centroid_distance,
+                            real_centroid_distance, real_normal_centroid_distance, ratio]
                 writer.writerow(data_row)
 
             error_distances = utils.distance_to_plane(
@@ -107,8 +116,11 @@ if __name__ == '__main__':
                     data_row = [filename[0], struct, error_distances[i]]
                     error_writer.writerow(data_row)
 
-            centroid_error.append(centroid_distance)
             normal_error.append(normal_angle)
+            centroid_error.append(centroid_distance)
+            normal_centroid_error.append(normal_centroid_distance)
+            real_centroid_error.append(real_centroid_distance)
+            real_normal_centroid_error.append(real_normal_centroid_distance)
 
             nrrd_data = nrrd.read(truth_nrrd_path)[0].astype(np.float64)
             pred_image = render_cross_section(
@@ -123,14 +135,25 @@ if __name__ == '__main__':
             print(f'[{batch:>3d}/{size:>3d}] {centroid_distance} {normal_angle}')
     centroid_error = np.array(centroid_error)
     normal_error = np.array(normal_error)
+    normal_centroid_error = np.array(normal_centroid_error)
+    real_centroid_error = np.array(real_centroid_error)
+    real_normal_centroid_error = np.array(real_normal_centroid_error)
     with open(save_path, 'a+') as file:
         writer = csv.writer(file)
-        writer.writerow(['[median]', '', '', np.median(
-            centroid_error), '', '', np.median(normal_error)])
-        writer.writerow(['[mean]', '', '', centroid_error.mean(),
-                        '', '', normal_error.mean()])
-        writer.writerow(['[std]', '', '', centroid_error.std(),
-                        '', '', normal_error.std()])
+        writer.writerow(['[median]', '', '', '', '',
+                         np.median(normal_error), np.median(centroid_error),
+                         np.median(normal_centroid_error), np.median(
+                             real_centroid_error),
+                         np.median(real_normal_centroid_error), ''])
+        writer.writerow(['[mean]', '', '', '', '',
+                         normal_error.mean(), centroid_error.mean(),
+                         normal_centroid_error.mean(), real_centroid_error.mean(),
+                         real_normal_centroid_error.mean(), ''])
+        writer.writerow(['[std]', '', '', '', '',
+                         normal_error.std(), centroid_error.std(),
+                         normal_centroid_error.std(), real_centroid_error.std(),
+                         real_normal_centroid_error.std(), ''])
+
     print(f'[median] {np.median(centroid_error)} {np.median(normal_error)}')
     print(f'[mean] {centroid_error.mean()} {normal_error.mean()}')
     print(f'[std] {centroid_error.std()} {normal_error.std()}')

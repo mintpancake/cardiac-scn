@@ -1,6 +1,7 @@
 import json
 import os
 import math
+import csv
 from datetime import datetime
 from PIL import Image
 import numpy as np
@@ -78,6 +79,17 @@ def get_view_index(name, type='abbr'):
         return VIEWS_ABBR.index(name)
 
 
+def read_ratio(path):
+    ratios = {}
+    with open(path, 'r') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if reader.line_num == 1:
+                continue
+            ratios[row[0]] = float(row[3])
+    return ratios
+
+
 def draw(data, filename, mode='clip'):
     path = os.path.split(filename)[0]
     ensure_dir(path)
@@ -113,6 +125,13 @@ def angle_between(v1, v2, directed=False):
     if not directed and angle > 90.0:
         angle = 180.0-angle
     return angle
+
+
+def distance_along_direction(x, y, u):
+    xy = y-x
+    u = unit_vector(u)
+    d = np.dot(xy, u)*u
+    return np.linalg.norm(d)
 
 
 def distance_to_plane(points, centroid, normal):
