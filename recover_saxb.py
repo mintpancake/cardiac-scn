@@ -67,7 +67,7 @@ if __name__ == '__main__':
         model.load_state_dict(checkpoint[model_key])
     model.eval()
 
-    normal_error, centroid_error, normal_centroid_error, real_centroid_error, real_normal_centroid_error = [], [], [], [], []
+    normal_error, centroid_error, normal_centroid_error, real_centroid_error, real_normal_centroid_error, mse_error = [], [], [], [], [], []
     size = len(loader)
     with torch.no_grad():
         for batch, (echo, truth, struct, filename) in enumerate(loader):
@@ -125,6 +125,7 @@ if __name__ == '__main__':
                 with open(error_path, 'a+') as file:
                     error_writer = csv.writer(file)
                     data_row = [filename[0], struct, error_distances[i]]
+                    mse_error.append(error_distances[i])
                     error_writer.writerow(data_row)
 
             normal_error.append(normal_angle)
@@ -149,6 +150,7 @@ if __name__ == '__main__':
     normal_centroid_error = np.array(normal_centroid_error)
     real_centroid_error = np.array(real_centroid_error)
     real_normal_centroid_error = np.array(real_normal_centroid_error)
+    mse_error = np.array(mse_error)
     with open(save_path, 'a+') as file:
         writer = csv.writer(file)
         writer.writerow(['[median]', '', '', '', '',
@@ -164,7 +166,11 @@ if __name__ == '__main__':
                          normal_error.std(), centroid_error.std(),
                          normal_centroid_error.std(), real_centroid_error.std(),
                          real_normal_centroid_error.std(), ''])
-
+    with open(error_path, 'a+') as file:
+        error_writer = csv.writer(file)
+        error_writer.writerow(['[median]', '', np.median(mse_error)])
+        error_writer.writerow(['[mean]', '', mse_error.mean()])
+        error_writer.writerow(['[std]', '', mse_error.std()])
     print(f'[median] {np.median(centroid_error)} {np.median(normal_error)}')
     print(f'[mean] {centroid_error.mean()} {normal_error.mean()}')
     print(f'[std] {centroid_error.std()} {normal_error.std()}')

@@ -5,19 +5,16 @@ from utils import draw
 from models.scn import SCN
 from dataset import EchoData
 
-pth_path = 'pths/tune/2023-01-08-00-03-49/100.pth'
+pth_path = 'pths/tune/2023-02-06-15-53-33/50.pth'
 save_dir = 'images'
 
-train_meta_path = 'data/meta/train/A2C'
-val_meta_path = 'data/meta/val/A2C'
+test_meta_path = 'data/meta/test/A2C'
 num_structs = 3
 
-# data/nrrd/A2C/PWHOR191326532P_1Nov2021_E1W04Z16_3DQ.nrrd,0,59.6267809031786,59.20592574032862,102.81748813845164
-# data/nrrd/A2C/PWHOR191326532P_1Nov2021_E1W04Z16_3DQ.nrrd,5,67.51562838702642,67.85268018021235,57.949426460171246
-# data/nrrd/A2C/PWHOR191326532P_1Nov2021_E1W04Z16_3DQ.nrrd,25,58.96937694619128,58.48536287033831,56.97403381499123
+# 21 64
 use_val = True
-data_index = 1
-channel, x = 0, 60
+data_index = 33
+channel, x = 0, 62
 supervised_channels = [0, 1, 2]
 
 
@@ -30,14 +27,11 @@ def criterion(pred, truth, channels):
 
 
 if __name__ == '__main__':
-    train_dataset = EchoData(train_meta_path, norm_echo=True,
+    dataset = EchoData(test_meta_path, norm_echo=True,
                              norm_truth=True, augmentation=False)
-    val_dataset = EchoData(val_meta_path, norm_echo=True,
-                           norm_truth=True, augmentation=False)
-    if use_val:
-        echo_data, truth_data, _s, _f = val_dataset[data_index]
-    else:
-        echo_data, truth_data, _s, _f = train_dataset[data_index]
+    echo_data, truth_data, _s, _f = dataset[data_index]
+    print(_f)
+    # exit()
 
     draw(echo_data.cpu().numpy()[0][x], os.path.join(
         save_dir, 'echo.png'), mode='raw')
@@ -66,6 +60,7 @@ if __name__ == '__main__':
         print('Invert HLA HSC')
     else:
         sign = 1
+    # sign = -1
     pred_HLA *= sign
     pred_HSC *= sign
 

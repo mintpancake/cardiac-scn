@@ -47,7 +47,7 @@ def ransac(data, model, n, k, t, d, debug=False, return_all=False):
         n - the minimum number of data values required to fit the model
         k - the maximum number of iterations allowed in the algorithm
         t - a threshold value for determining when a data point fits a model
-        d - the number of close data values required to assert that a model fits well to data
+        d - the number of additional close data values required to assert that a model fits well to data
     Return:
         bestfit - model parameters which best fit the data (or nil if no good model is found)
     iterations = 0
